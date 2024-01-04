@@ -7,7 +7,7 @@
     <div id="about-me-inner">
       <div v-if="!showAboutMe" class="profile-image-container">
         <img
-          src="https://headshots-inc.com/wp-content/uploads/2023/02/professional-headshot-photography-example-7-1.jpg"
+          src="../assets/photos/skylersimpson.jpg"
           alt="Profile Image"
           class="profile-image"
         />
@@ -44,7 +44,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 500px;
+  height: 740px;
   width: 500px;
   cursor: pointer;
   perspective: 1000px; /* Add perspective for 3D effect */
