@@ -185,4 +185,19 @@ export default {
 .links li a:hover {
   text-decoration: underline; /* adds underline on hover */
 }
+@media screen and (max-width: 480px) {
+  .project-image {
+    height: 150px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .project h2 {
+    color: #003d5b; /* Darker blue for the title */
+    font-size: 20px;
+    text-decoration: underline;
+  }
+  .project {
+    width: 300px;
+  }
+}
 </style>

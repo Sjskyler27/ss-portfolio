@@ -110,4 +110,24 @@ export default {
   align-items: center;
   padding: 7px;
 }
+@media screen and (max-width: 480px) {
+  .text-content {
+    width: 100%;
+  }
+  #about-me-wrapper {
+    text-align: center;
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 450px;
+    width: 300px;
+  }
+  .profile-image {
+    width: 300px; /* Set the image width to 100% */
+    max-height: 100%;
+    transition: transform 0.3s ease-in-out;
+    border-radius: 10px;
+  }
+}
 </style>
