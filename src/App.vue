@@ -98,11 +98,20 @@
       ></ProjectComponent> -->
       <div>
         <a
-          href="@/assets/skylersimpson.pdf"
+          href="./assets/photos/skylersimpson.pdf"
           download="skylersimpson.pdf"
           class="download-button"
         >
           Download My Resume
+        </a>
+      </div>
+      <div>
+        <a
+          href="./assets/images/skylersimpson.pdf"
+          target="_blank"
+          class="view-pdf-button"
+        >
+          View PDF Here
         </a>
       </div>
     </div>
