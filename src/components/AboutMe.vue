@@ -16,9 +16,14 @@
         <div class="text-content">
           <h2>About Me</h2>
           <p>
-            Hello! I'm Skyler Simpson, a passionate web developer currently
-            studying software engineering at BYUI. I love creating web
-            applications and exploring new technologies.
+            I am a full stack developer from Fort Mill South Carolina. I develop
+            websites using frameworks such as vue and react. I have experience
+            working as a solo contractor for a local and as a member of a team
+            of a nation wide staffing company. I am graduating from BYUI in
+            April 2024 with a BS in Software Engineering and a certificate in
+            Web Development. In my free time I enjoy mountain unicycling with my
+            friends, and Camping in Lynnville NC. Feel free to check out my
+            website below where you can learn more and view my full portfolio.
           </p>
           <!-- Add more information about yourself here -->
         </div>
@@ -103,5 +108,6 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 7px;
 }
 </style>

@@ -3,10 +3,10 @@
     <div id="centered-container">
       <h1>Skyler Simpsons Portfolio</h1>
       <AboutMe></AboutMe>
+      <h1>My Projects</h1>
       <ProjectComponent
         title="Itch Programming for Kids!"
-        timeframe="24 hours"
-        description="This is a detailed description of the project."
+        description="Itch is a programming website aimed to help children transition from block coding like scratch to coding with languages like python and VB. Me and my team had 24 hours to complete this website as part of a BYUI hackathon. We created our website using Vue, HTML, CSS, Javascript, and netlify. We are very happy with our accomplishments and we were even awarded third place."
         image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
         :images="[
           'https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png',
@@ -25,8 +25,8 @@
       ></ProjectComponent>
       <ProjectComponent
         title="StoneCrest Suites"
-        timeframe="100 hours"
-        description="This is a detailed description of the project."
+        description="I had the opportunity to work as a contractor for stonecrest suites as a solo full stack developer. They had recently acquired another office building for there lawfirm and had extra rooms that they were renting out to businesses. This was all being done through 
+        word of mouth. I was able to step in and create a website for them that allowed users to create an account and reserve conference and office rooms. The website that I created is scaleable allowing admins to add locations, rooms, edit reservations etc. They are also able to edit the appearance of their website along with any pertinent information"
         :images="[
           'https://i.ibb.co/7zZ23JW/image.png',
           'https://i.ibb.co/Cm5Dm9t/image.png',
@@ -44,7 +44,7 @@
         ]"
       ></ProjectComponent>
       <ProjectComponent
-        title="Itch Programming for Kids!"
+        title="Plums!"
         timeframe="24 hours"
         description="This is a detailed description of the project."
         image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
@@ -59,7 +59,7 @@
         ]"
       ></ProjectComponent>
       <ProjectComponent
-        title="Itch Programming for Kids!"
+        title="CodeNames"
         timeframe="24 hours"
         description="This is a detailed description of the project."
         images="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
@@ -74,7 +74,7 @@
         ]"
       ></ProjectComponent>
       <ProjectComponent
-        title="Itch Programming for Kids!"
+        title="Holidea"
         timeframe="24 hours"
         description="This is a detailed description of the project."
         image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
