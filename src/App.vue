@@ -96,6 +96,15 @@
           },
         ]"
       ></ProjectComponent> -->
+      <div>
+        <a
+          href="@/assets/skylersimpson.docx"
+          download="skylersimpson.docx"
+          class="download-button"
+        >
+          Download My Resume
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -117,6 +126,20 @@ export default {
   flex-direction: column; /* Stack items vertically */
   align-items: center; /* Center items horizontally */
   justify-content: center; /* Center items vertically */
+}
+
+.download-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #0074d9; /* Adjust the background color */
+  color: #fff; /* Adjust the text color */
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.download-button:hover {
+  background-color: #0056b3; /* Adjust the hover background color */
 }
 
 ::-webkit-scrollbar {
