@@ -133,4 +133,9 @@ export default {
   background-color: #e5e5e5; /* Set the track color */
   border-radius: 4px; /* Round the track edges */
 }
+@media screen and (max-width: 480px) {
+  h1 {
+    font-size: 26px;
+  }
+}
 </style>
