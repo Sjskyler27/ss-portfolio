@@ -34,9 +34,11 @@
           'https://i.ibb.co/bvNBrJk/image.png',
         ]"
         :links="[
-          { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/itch/' },
-          { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-          { name: 'Devpost submission', url: 'https://example.com' },
+          {
+            name: 'GitHub Repo',
+            url: 'https://github.com/Sjskyler27/stonecrest-suites/',
+          },
+          { name: 'Live Demo', url: 'https://stoncrestsuites.netlify.app/' },
           {
             name: 'YouTube Demonstration',
             url: 'https://youtu.be/FZvFJNQyTms',
@@ -45,13 +47,16 @@
       ></ProjectComponent>
       <ProjectComponent
         title="Plums!"
-        timeframe="24 hours"
-        description="This is a detailed description of the project."
-        image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
+        description="Plums is a personal learning managmeant system, or PLMS for short. It is a full stack website that allows a user to store information that they have acquired in a localized place, wether that be youtube videos on calculus or articles on geometry. This website was made using React, Tailwind, mongoDB, and netlify."
+        :images="[
+          'https://i.ibb.co/7Nz9N0m/image.png',
+          'https://i.ibb.co/0Yvcxcy/image.png',
+          'https://i.ibb.co/QmzMPQz/image.png',
+          'https://i.ibb.co/5Rt4xLS/image.png',
+        ]"
         :links="[
-          { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/itch/' },
-          { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-          { name: 'Devpost submission', url: 'https://example.com' },
+          { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/plums/' },
+          { name: 'Live Demo', url: 'https://plms.netlify.app/' },
           {
             name: 'YouTube Demonstration',
             url: 'https://youtu.be/FZvFJNQyTms',
@@ -60,34 +65,37 @@
       ></ProjectComponent>
       <ProjectComponent
         title="CodeNames"
-        timeframe="24 hours"
-        description="This is a detailed description of the project."
-        images="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
+        description="This Website is a recreation of the popular board game Code Names and its varient Code Names Duet. Code Names is a game were two teams are trying to guess all of there words before the other. Two code masters will look at there solution to give hints to there team. This full stack project had a lot of fun javascript problems that I enjoyed solving when it came to generateing all of the solutions for the teams particularly in the duet version."
+        :images="[
+          'https://i.ibb.co/xhF5CxB/image.png',
+          'https://i.ibb.co/JjjNSGp/image.png',
+          'https://i.ibb.co/kKSWSnv/image.png',
+        ]"
         :links="[
-          { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/itch/' },
-          { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-          { name: 'Devpost submission', url: 'https://example.com' },
+          {
+            name: 'GitHub Repo',
+            url: 'https://github.com/Sjskyler27/codenames/',
+          },
+          { name: 'Live Demo', url: 'https://codenamesbyskyler.netlify.app/' },
           {
             name: 'YouTube Demonstration',
             url: 'https://youtu.be/FZvFJNQyTms',
           },
         ]"
       ></ProjectComponent>
-      <ProjectComponent
-        title="Holidea"
-        timeframe="24 hours"
-        description="This is a detailed description of the project."
-        image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
+      <!-- <ProjectComponent
+        title="Holidea Board Games"
+        description="I had the opportunity to participate in a hackothon where we had to reach out to companies around us to find a problem to solve in 24 hours. we reached out to our local board game store to see what they might need and learned that they had no way of signing members in for there board game competitions and for renting games. so in 24 hours using django and python we created a fullstack application that they could use to keep track of there users, It included a picture a passcode and a member rank. members were then able to quickly sign in when they arrived and could proceed to enjoy there games.  "
+        :images="['']"
         :links="[
           { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/itch/' },
           { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-          { name: 'Devpost submission', url: 'https://example.com' },
           {
             name: 'YouTube Demonstration',
             url: 'https://youtu.be/FZvFJNQyTms',
           },
         ]"
-      ></ProjectComponent>
+      ></ProjectComponent> -->
     </div>
   </div>
 </template>

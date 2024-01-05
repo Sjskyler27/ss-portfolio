@@ -108,6 +108,8 @@ export default {
 
 .project h2 {
   color: #003d5b; /* Darker blue for the title */
+  font-size: 30px;
+  text-decoration: underline;
 }
 
 .timeframe {
@@ -116,8 +118,7 @@ export default {
 }
 
 .project-image {
-  max-width: 400px;
-  height: auto;
+  height: 300px;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -166,6 +167,9 @@ export default {
 
 .description {
   color: #005f73; /* Slightly darker blue for text */
+  text-align: left;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .links {
