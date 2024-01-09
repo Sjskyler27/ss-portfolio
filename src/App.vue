@@ -1,8 +1,16 @@
 <template>
   <div id="app">
-    <div id="centered-container">
+    <div style="display: grid; grid-template-columns: 3fr auto">
       <h1>Skyler Simpsons Portfolio</h1>
+      <div style="align-items: center">
+        <a href="skylersimpson.pdf" target="_blank" class="view-pdf-button">
+          View Resume
+        </a>
+      </div>
+    </div>
+    <div id="centered-container">
       <AboutMe></AboutMe>
+      <br />
       <h1>My Projects</h1>
       <ProjectComponent
         title="Itch Programming for Kids!"
@@ -96,24 +104,6 @@
           },
         ]"
       ></ProjectComponent> -->
-      <div>
-        <a
-          href="../public/skylersimpson.pdf"
-          download="skylersimpson.pdf"
-          class="download-button"
-        >
-          Download My Resume
-        </a>
-      </div>
-      <div>
-        <a
-          href="../public/skylersimpson.pdf"
-          target="_blank"
-          class="view-pdf-button"
-        >
-          View PDF Here
-        </a>
-      </div>
     </div>
   </div>
 </template>
@@ -137,6 +127,16 @@ export default {
   justify-content: center; /* Center items vertically */
 }
 
+.view-pdf-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #0074d9; /* Adjust the background color */
+  color: #fff; /* Adjust the text color */
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 6px;
+}
 .download-button {
   display: inline-block;
   padding: 10px 20px;
