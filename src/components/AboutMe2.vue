@@ -36,9 +36,11 @@ export default {
   color: white;
   background-image: url(../assets/photos/skylersimpson.jpg);
   background-size: cover;
-  padding: 35rem 0 0;
-  max-width: 80ch;
+  padding: 30rem 0 0;
+  max-width: 75ch;
   overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
 }
 .card-content {
   font-size: larger;
@@ -113,16 +115,22 @@ export default {
     color: white;
     background-image: url(../assets/photos/skylersimpson.jpg);
     background-size: cover;
-    background-position-x: -55px;
-    padding: 14rem 0 0;
-    max-width: 80ch;
+    padding: 12rem 0 0;
+    max-width: 52ch;
     overflow: hidden;
   }
   .card-content {
-    font-size: medium;
-    font-weight: 100;
+    font-size: small;
+    font-weight: 200;
     --padding: 1.5rem;
     padding: var(--padding);
+  }
+  .card-title {
+    font-size: large;
+  }
+  .view-pdf-button {
+    font-size: small;
+    padding: 4px 7px;
   }
 }
 </style>
