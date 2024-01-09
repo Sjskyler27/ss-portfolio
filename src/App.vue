@@ -3,7 +3,11 @@
     <div style="display: grid; grid-template-columns: 3fr auto">
       <h1>Skyler Simpsons Portfolio</h1>
       <div style="align-items: center">
-        <a href="skylersimpson.pdf" target="_blank" class="view-pdf-button">
+        <a
+          href="skylersimpson1-9-24.pdf"
+          target="_blank"
+          class="view-pdf-button"
+        >
           My Resume
         </a>
       </div>
