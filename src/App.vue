@@ -3,17 +3,17 @@
     <div style="display: grid; grid-template-columns: 3fr auto">
       <h1>Skyler Simpsons Portfolio</h1>
       <div style="align-items: center">
-        <a
+        <!-- <a
           href="skylersimpson1-9-24.pdf"
           target="_blank"
           class="view-pdf-button"
         >
           My Resume
-        </a>
+        </a> -->
       </div>
     </div>
     <div id="centered-container">
-      <AboutMe></AboutMe>
+      <AboutMe2></AboutMe2>
       <br />
       <h1>My Projects</h1>
       <ProjectComponent
@@ -113,11 +113,11 @@
 </template>
 
 <script>
-import AboutMe from './components/AboutMe.vue'; // Import AboutMe
+import AboutMe2 from './components/AboutMe2.vue'; // Import AboutMe
 
 export default {
   components: {
-    AboutMe, // Register AboutMe as a child component
+    AboutMe2, // Register AboutMe as a child component
   },
   mounted() {
     // Scroll to the top of the page when the component is mounted
@@ -138,31 +138,6 @@ h1 {
   flex-direction: column; /* Stack items vertically */
   align-items: center; /* Center items horizontally */
   justify-content: center; /* Center items vertically */
-}
-
-.view-pdf-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #00b4d8; /* Adjust the background color */
-  color: #fff; /* Adjust the text color */
-  text-decoration: none;
-  border-radius: 5px;
-  font-size: 16px;
-  padding: 6px;
-  margin-top: 25px;
-}
-.download-button {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #0074d9; /* Adjust the background color */
-  color: #fff; /* Adjust the text color */
-  text-decoration: none;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.view-pdf-button:hover {
-  background-color: #00c4eb; /* Adjust the hover background color */
 }
 
 ::-webkit-scrollbar {
