@@ -119,7 +119,10 @@ export default {
   components: {
     AboutMe, // Register AboutMe as a child component
   },
-  // Other properties and methods of your parent component
+  mounted() {
+    // Scroll to the top of the page when the component is mounted
+    window.scrollTo(0, 0);
+  },
 };
 </script>
 
