@@ -120,6 +120,12 @@ export default {
 </script>
 
 <style lang="scss">
+h1 {
+  color: #003d5b;
+  font-family: Century Gothic;
+  font-weight: 200;
+  font-size: 40px;
+}
 #centered-container {
   display: flex;
   flex-direction: column; /* Stack items vertically */
@@ -130,12 +136,13 @@ export default {
 .view-pdf-button {
   display: inline-block;
   padding: 10px 20px;
-  background-color: #0074d9; /* Adjust the background color */
+  background-color: #00b4d8; /* Adjust the background color */
   color: #fff; /* Adjust the text color */
   text-decoration: none;
   border-radius: 5px;
   font-size: 16px;
   padding: 6px;
+  margin: auto;
 }
 .download-button {
   display: inline-block;
@@ -147,8 +154,8 @@ export default {
   font-size: 16px;
 }
 
-.download-button:hover {
-  background-color: #0056b3; /* Adjust the hover background color */
+.view-pdf-button:hover {
+  background-color: #00c4eb; /* Adjust the hover background color */
 }
 
 ::-webkit-scrollbar {
