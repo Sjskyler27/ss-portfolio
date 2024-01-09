@@ -4,7 +4,7 @@
       <h1>Skyler Simpsons Portfolio</h1>
       <div style="align-items: center">
         <a href="skylersimpson.pdf" target="_blank" class="view-pdf-button">
-          View Resume
+          My Resume
         </a>
       </div>
     </div>
@@ -142,7 +142,7 @@ h1 {
   border-radius: 5px;
   font-size: 16px;
   padding: 6px;
-  margin: auto;
+  margin-top: 25px;
 }
 .download-button {
   display: inline-block;
