@@ -6,7 +6,7 @@
       <h1>My Projects</h1>
       <ProjectComponent
         title="Itch Programming for Kids!"
-        description="Itch is a programming website aimed to help children transition from block coding like scratch to coding with languages like python and VB. Me and my team had 24 hours to complete this website as part of a BYUI hackathon. We created our website using Vue, HTML, CSS, Javascript, and netlify. We are very happy with our accomplishments and we were even awarded third place."
+        description="Itch is a programming website aimed to help children transition from block coding like scratch to coding with languages like python and VB. Me and my team had 24 hours to complete this website as part of a hackathon. We created our website using Vue, HTML, CSS, Javascript, and netlify. We are very happy with our accomplishments and we were even awarded third place."
         image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
         :images="[
           'https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png',
@@ -24,9 +24,9 @@
         ]"
       ></ProjectComponent>
       <ProjectComponent
-        title="StoneCrest Suites"
-        description="I had the opportunity to work as a contractor for stonecrest suites as a solo full stack developer. They had recently acquired another office building for there lawfirm and had extra rooms that they were renting out to businesses. This was all being done through 
-        word of mouth. I was able to step in and create a website for them that allowed users to create an account and reserve conference and office rooms. The website that I created is scaleable allowing admins to add locations, rooms, edit reservations etc. They are also able to edit the appearance of their website along with any pertinent information"
+        title="Stonecrest Rentals"
+        description="I had the opportunity to work as a contractor for Stonecrest Rentals as a solo full stack developer. They had recently acquired another office building and had extra rooms that they were renting out to businesses. This was all being done through 
+        word of mouth. I was able to step in and create a website for them that allowed users to create an account and reserve conference and office rooms. The website that I created is scalable allowing admins to add locations, rooms, edit reservations etc. They are also able to edit the appearance of their website along with any pertinent information"
         :images="[
           'https://i.ibb.co/7zZ23JW/image.png',
           'https://i.ibb.co/Cm5Dm9t/image.png',
@@ -40,14 +40,14 @@
           },
           { name: 'Live Demo', url: 'https://stoncrestsuites.netlify.app/' },
           {
-            name: 'YouTube Demonstration',
-            url: 'https://youtu.be/FZvFJNQyTms',
+            name: 'Loom Demonstration',
+            url: 'https://www.loom.com/share/aba5b1c96d82414f93353d9c5e6bd76e',
           },
         ]"
       ></ProjectComponent>
       <ProjectComponent
         title="Plums!"
-        description="Plums is a personal learning managmeant system, or PLMS for short. It is a full stack website that allows a user to store information that they have acquired in a localized place, wether that be youtube videos on calculus or articles on geometry. This website was made using React, Tailwind, mongoDB, and netlify."
+        description="Plums is a personal learning management system. It is a full stack website that allows a user to store information that they have acquired in a localized place, wether that be youtube videos on calculus or articles on geometry. This website was made using React, Tailwind, mongoDB, and netlify."
         :images="[
           'https://i.ibb.co/7Nz9N0m/image.png',
           'https://i.ibb.co/0Yvcxcy/image.png',
@@ -59,13 +59,13 @@
           { name: 'Live Demo', url: 'https://plms.netlify.app/' },
           {
             name: 'YouTube Demonstration',
-            url: 'https://youtu.be/FZvFJNQyTms',
+            url: 'https://www.youtube.com/watch?v=fRTuhJUNvOc',
           },
         ]"
       ></ProjectComponent>
       <ProjectComponent
         title="CodeNames"
-        description="This Website is a recreation of the popular board game Code Names and its varient Code Names Duet. Code Names is a game were two teams are trying to guess all of there words before the other. Two code masters will look at there solution to give hints to there team. This full stack project had a lot of fun javascript problems that I enjoyed solving when it came to generateing all of the solutions for the teams particularly in the duet version."
+        description="This Website is a recreation of the popular board game Code Names and its variant Code Names Duet. Code Names is a game were two teams are trying to guess all of their words before the other. Two code masters will look at their solution to give hints to their team. This full stack project had a lot of fun javascript problems that I enjoyed solving when it came to generating all of the solutions for the teams particularly in the duet version."
         :images="[
           'https://i.ibb.co/xhF5CxB/image.png',
           'https://i.ibb.co/JjjNSGp/image.png',
@@ -79,7 +79,7 @@
           { name: 'Live Demo', url: 'https://codenamesbyskyler.netlify.app/' },
           {
             name: 'YouTube Demonstration',
-            url: 'https://youtu.be/FZvFJNQyTms',
+            url: 'https://youtu.be/837LC4l-2mg?si=4VBvupHLTMw_P1Qe',
           },
         ]"
       ></ProjectComponent>
@@ -98,7 +98,7 @@
       ></ProjectComponent> -->
       <div>
         <a
-          href="./assets/photos/skylersimpson.pdf"
+          href="../public/skylersimpson.pdf"
           download="skylersimpson.pdf"
           class="download-button"
         >
@@ -107,7 +107,7 @@
       </div>
       <div>
         <a
-          href="./assets/images/skylersimpson.pdf"
+          href="../public/skylersimpson.pdf"
           target="_blank"
           class="view-pdf-button"
         >
