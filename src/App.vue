@@ -18,7 +18,7 @@
       <h1>My Projects</h1>
       <ProjectComponent
         title="Itch Programming for Kids!"
-        description="Itch is a programming website aimed to help children transition from block coding like scratch to coding with languages like python and VB. Me and my team had 24 hours to complete this website as part of a hackathon. We created our website using Vue, HTML, CSS, Javascript, and netlify. We are very happy with our accomplishments and we were even awarded third place."
+        description="Itch is a programming website aimed to help children transition from block coding like scratch to coding with languages like python and VB. My team and I had 24 hours to complete this website as part of a hackathon. We created our website using Vue, HTML, CSS, Javascript, and netlify. We are very happy with our accomplishments and we were even awarded third place."
         image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
         :images="[
           'https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png',
@@ -28,11 +28,11 @@
         :links="[
           { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/itch/' },
           { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-          { name: 'Devpost submission', url: 'https://example.com' },
           {
             name: 'YouTube Demonstration',
             url: 'https://youtu.be/FZvFJNQyTms',
           },
+          { name: 'Hackathon Competition', url: 'https://example.com' },
         ]"
       ></ProjectComponent>
       <ProjectComponent
@@ -132,6 +132,7 @@ h1 {
   font-family: Century Gothic;
   font-weight: 200;
   font-size: 40px;
+  margin: 8px;
 }
 #centered-container {
   display: flex;
@@ -154,7 +155,7 @@ h1 {
   background-color: #e5e5e5; /* Set the track color */
   border-radius: 4px; /* Round the track edges */
 }
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 650px) {
   h1 {
     font-size: 26px;
   }

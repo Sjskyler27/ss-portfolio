@@ -110,14 +110,28 @@ export default {
     transition-delay: 500ms;
   }
 }
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 1600px) {
   .card {
-    color: white;
-    background-image: url(../assets/photos/skylersimpson.jpg);
-    background-size: cover;
+    padding: 20rem 0 0;
+    max-width: 62ch;
+  }
+  .card-content {
+    font-size: medium;
+    font-weight: 100;
+    --padding: 1.5rem;
+    padding: var(--padding);
+  }
+  .card-title {
+  }
+  .view-pdf-button {
+    font-size: medium;
+    padding: 4px 7px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .card {
     padding: 12rem 0 0;
     max-width: 52ch;
-    overflow: hidden;
   }
   .card-content {
     font-size: small;
