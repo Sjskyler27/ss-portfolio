@@ -9,8 +9,9 @@
         team of a nation wide staffing company. I am graduating from BYUI in
         April 2024 with a BS in Software Engineering and a certificate in Web
         Development. In my free time I enjoy mountain unicycling with my
-        friends, and Camping in Lynville NC. Feel free to check out my website
-        below where you can learn more and view my full portfolio.
+        friends, Camping in Lynville NC, and creating fun Python projects. Feel
+        free to check out my website below where you can learn more and view my
+        full portfolio.
       </p>
       <a href="skylersimpson1-9-24.pdf" target="_blank" class="view-pdf-button">
         My Resume
