@@ -58,6 +58,41 @@
         ]"
       ></ProjectComponent>
       <ProjectComponent
+        title="Bot Predictions for HEAT "
+        description="This was a fun use of both Python and Excel; Excel is already a powerful tool 
+        on its own that I enjoy using however, when you combine it 
+        with openpyxl you can do just about anything. I found myself enjoying the board game HEAT very much, 
+        and wanted to get more maps for it. It was difficult to choose from the 30 different maps since they had no difficulty or time stats. So I took it upon
+        myself to determine these stats using the bot mechanics. In this game you can race against bots that have a specific logic for getting around the track based upon a deck of ten cards and some special
+        map indicators. Games were often close between the bots and the players so I knew that this would be a good indicator of the time stat. I created a python script that
+        had a bot class and a race function. The bot had functions such as getMapValues, draw card, move, and corner. The race function
+        would load the race track from the excel spreadsheet that had values such as distance from corners, distance from start, corner speed, etc.
+        Using this Python program I was able to run hundreds of simulations for every track and log a large amount of data. Time was easy to figure out 
+        since we could just multiply the amount of average turns it took a bot to finish the race by the average time our group of players took to complete
+        a turn. Difficulty was a little harder to determine. As I looked at the data I found a trend in what we considered the more dificult maps.
+        In those maps the bots had a corner rate higher than .5. a corner rate of .5 would mean that every other turn the car would pass a corner, i.e. turn 1 move 10 spaces
+        to the corner, turn 2 move 3 spaces past the corner. If your corner rate is higher than .5 sometimes you are passing a corner quickly. This
+        is easier for bots since they don't have to pay the penalty that players have to pay. Using this knowlage I was able to create a table that represented 
+        each tracks difficulty and time. I posted my findings on the forum and to my delight the times were accurate to within 2 or 3 minutes of my predictions.
+        And although the dificulty is harder to precisely measure I found that new players had a much harder time keeping up on maps that were marked with a higher
+        difficulty."
+        :images="[
+          'https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__imagepage/img/k4uPIqjYuWBzofFiCyjSWN6KJow=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6940449.png',
+          'https://cf.geekdo-images.com/GpyIgLpb_eSOsC9Y05nmyw__imagepage/img/enHJ780fj7F8GZsNLtzUylEdhVQ=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427299.png',
+          'https://cf.geekdo-images.com/S1KkjFX5vodPEcF94wGtHQ__imagepage/img/VWH3CKPqRsoHDQ1v76A5VGMMI_o=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427298.png',
+        ]"
+        :links="[
+          {
+            name: 'Github Repo',
+            url: 'https://github.com/Sjskyler27/HEATMAPTEST',
+          },
+          {
+            name: 'Forum Post',
+            url: 'https://boardgamegeek.com/thread/3055787/article/42258347#42258347',
+          },
+        ]"
+      ></ProjectComponent>
+      <ProjectComponent
         title="Plums!"
         description="Plums is a personal learning management system. It is a full stack website that allows a user to store information that they have acquired in a localized place, wether that be youtube videos on calculus or articles on geometry. This website was made using React, Tailwind, mongoDB, and netlify."
         :images="[
