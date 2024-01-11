@@ -122,7 +122,8 @@ export default {
   mounted() {
     // Scroll to the top of the page when the component is mounted
     window.scrollTo(0, 0);
-    fetch();
+    this.bootCodenames();
+    this.bootStoneCrest();
   },
   methods: {
     async bootStoneCrest() {
