@@ -38,7 +38,7 @@
       <ProjectComponent
         title="Stonecrest Rentals"
         description="I had the opportunity to work as a contractor for Stonecrest Rentals as a solo full stack developer. They had recently acquired another office building and had extra rooms that they were renting out to businesses. This was all being done through 
-        word of mouth. I was able to step in and create a website for them that allowed users to create an account and reserve conference and office rooms. The website that I created is scalable allowing admins to add locations, rooms, edit reservations etc. They are also able to edit the appearance of their website along with any pertinent information"
+        word of mouth. I worked closely with the company using Figma to create designs for the user and admin experience. We discussed the benefits of using a relational database for there needs, I created the schema in Dbdiagram and showed them how the relations could map to each other. Using Node, Sequelize, and Swagger I set up the skeleton for the backend and connected it to Render. I then got to work setting up the frontend using Vue and hosting it on Netlify. I worked between the two creating my components and controllers, presenting my progress to the company weekly using Jira to create sprints and tickets for myself. One of my goals for the project was to make something that the company could Easily maintain themselves, so I created the admin page that allows them to create edit and delete: rooms, new locations, amenities, etc. They are also able to easily edit the landing pages pricing info and text. they can even edit the website Title, logo and color scheme due to the use of SCSS."
         :images="[
           'https://i.ibb.co/7zZ23JW/image.png',
           'https://i.ibb.co/Cm5Dm9t/image.png',
@@ -122,6 +122,51 @@ export default {
   mounted() {
     // Scroll to the top of the page when the component is mounted
     window.scrollTo(0, 0);
+    fetch();
+  },
+  methods: {
+    async bootStoneCrest() {
+      try {
+        // eslint-disable-next-line no-unused-vars
+        const response = await fetch(
+          'https://stonecrast-api.onrender.com/api',
+          {
+            method: 'GET',
+          }
+        )
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+          })
+          .then(data => {
+            console.log(data);
+          });
+      } catch (error) {
+        console.error('Error fetching stonecrest data:', error);
+      }
+    },
+    async bootCodenames() {
+      try {
+        // eslint-disable-next-line no-unused-vars
+        const response = await fetch(
+          'https://codenamesdb.onrender.com/getAllCodes',
+          {
+            method: 'GET',
+          }
+        )
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+          })
+          .then(data => {
+            console.log(data);
+          });
+      } catch (error) {
+        console.error('Error fetching Codenames data:', error);
+      }
+    },
   },
 };
 </script>
