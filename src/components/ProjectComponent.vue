@@ -6,7 +6,7 @@
     <div class="carousel">
       <div class="carousel-content">
         <div
-          v-for="(image, index) in images"
+          v-for="(image, index) in resolvedImages"
           :key="index"
           class="carousel-item"
         >
@@ -49,6 +49,19 @@ export default {
       showModal: false,
       modalImage: '',
     };
+  },
+
+  computed: {
+    resolvedImages() {
+      return this.images.map(image => {
+        try {
+          return require(`@/assets/photos/${image}`);
+        } catch (e) {
+          console.error(e);
+          return image;
+        }
+      });
+    },
   },
   methods: {
     openModal(image) {
