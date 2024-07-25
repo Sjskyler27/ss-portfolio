@@ -12,7 +12,7 @@
         >
           <img
             :src="image"
-            @click="openModal(image)"
+            @click="openModal(index)"
             :alt="title"
             class="project-image"
           />
@@ -29,6 +29,8 @@
     <div class="modal" v-if="showModal">
       <span class="close" @click="closeModal">&times;</span>
       <img :src="modalImage" alt="Enlarged Image" class="modal-image" />
+      <div class="arrow left-arrow" @click="prevImage">&#9664;</div>
+      <div class="arrow right-arrow" @click="nextImage">&#9654;</div>
     </div>
   </div>
 </template>
@@ -48,9 +50,9 @@ export default {
     return {
       showModal: false,
       modalImage: '',
+      currentIndex: 0,
     };
   },
-
   computed: {
     resolvedImages() {
       return this.images.map(image => {
@@ -64,13 +66,25 @@ export default {
     },
   },
   methods: {
-    openModal(image) {
-      console.log('enlarge' + image);
-      this.modalImage = image;
+    openModal(index) {
+      this.currentIndex = index;
+      this.modalImage = this.resolvedImages[index];
       this.showModal = true;
     },
     closeModal() {
       this.showModal = false;
+    },
+    prevImage() {
+      if (this.currentIndex > 0) {
+        this.currentIndex -= 1;
+        this.modalImage = this.resolvedImages[this.currentIndex];
+      }
+    },
+    nextImage() {
+      if (this.currentIndex < this.resolvedImages.length - 1) {
+        this.currentIndex += 1;
+        this.modalImage = this.resolvedImages[this.currentIndex];
+      }
     },
   },
 };
@@ -105,15 +119,38 @@ export default {
   color: white;
 }
 
-.modal:target {
-  display: block;
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 36px;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  background-color: #d7d7d700;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.left-arrow {
+  left: 40px;
+}
+
+.right-arrow {
+  right: 40px;
+}
+
 .project {
+  box-sizing: border-box;
   width: 600px;
   border: 0px solid #004d7a; /* Navy blue border */
   border-radius: 8px;
   padding: 20px;
-  margin: 20px 0;
+  margin: 25px;
   background-color: #f0f9ff; /* Light blue background */
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* subtle shadow */
   text-align: center;
@@ -122,7 +159,6 @@ export default {
 .project h2 {
   color: #003d5b; /* Darker blue for the title */
   font-size: 30px;
-  text-decoration: underline;
 }
 
 .timeframe {
@@ -135,33 +171,20 @@ export default {
   border-radius: 4px;
   cursor: pointer;
 }
+
 .carousel {
   overflow: hidden;
   position: relative;
   width: 100%;
 }
+
 .carousel-content {
   display: flex;
   overflow-x: auto; /* Enable horizontal scrolling */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin; /* Set the scrollbar width to thin */
-  scrollbar-color: #0077b6 #ababab; /* Set the scrollbar color */
-  /* You can adjust the colors as per your preference */
-}
-.carousel-content::-webkit-scrollbar {
-  width: 8px; /* Set the scrollbar width */
-  height: 8px; /* Set the scrollbar height */
-}
-
-.carousel-content::-webkit-scrollbar-thumb {
-  background-color: #5a7c8e; /* Set the thumb color */
-  border-radius: 4px; /* Round the thumb edges */
-}
-
-.carousel-content::-webkit-scrollbar-track {
-  background-color: #e5e5e5; /* Set the track color */
-  border-radius: 4px; /* Round the track edges */
+  scrollbar-color: #5a7c8e #e5e5e5; /* Set the scrollbar color */
 }
 
 .carousel-content::before {
@@ -198,6 +221,7 @@ export default {
 .links li a:hover {
   text-decoration: underline; /* adds underline on hover */
 }
+
 @media screen and (min-width: 1600px) {
   .description {
     font-size: 18px;
@@ -217,6 +241,7 @@ export default {
     width: 800px;
   }
 }
+
 @media screen and (max-width: 650px) {
   .project-image {
     height: 150px;
