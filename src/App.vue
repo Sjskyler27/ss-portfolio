@@ -94,6 +94,18 @@
             >
             </ProjectComponent>
             <ProjectComponent
+              title="Subscriptions"
+              description="We are working on implementing a subscription service for our practices that will allow them special privileges such as converting temporary job posts to permanent reduced markup payments and other privileges."
+              :images="[
+                'subscriptions/1.png',
+                'subscriptions/2.png',
+                'subscriptions/3.png',
+                'subscriptions/4.png',
+              ]"
+              :links="[]"
+            >
+            </ProjectComponent>
+            <ProjectComponent
               title="Practice Mobile Experience"
               description="Our practice experience is getting ready for a major overhaul that will allow our practice to use a mobile browser. In its current state the Practice experience is configured only for desktop. I have created a pop up that will notify users once 
               that we are working on the mobile experience. We give them the opportunity to receive a message when that experience is ready. I have started the first steps of our mobile enhancements by creating a menu drop down that will be used instead of the tabs on the 
