@@ -8,7 +8,7 @@
           target="_blank"
           class="view-pdf-button"
         >
-          My Resume tsest
+          My Resume
         </a> -->
       </div>
     </div>
