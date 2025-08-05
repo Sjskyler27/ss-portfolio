@@ -163,10 +163,6 @@
                   url: 'https://github.com/Sjskyler27/stonecrest-suites/',
                 },
                 {
-                  name: 'Live Demo',
-                  url: 'https://stoncrestsuites.netlify.app/',
-                },
-                {
                   name: 'Loom Demonstration',
                   url: 'https://www.loom.com/share/aba5b1c96d82414f93353d9c5e6bd76e',
                 },
