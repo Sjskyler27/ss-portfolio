@@ -229,7 +229,7 @@
                 },
               ]"
             ></ProjectComponent>
-            <ProjectComponent
+            <!-- <ProjectComponent
               title="Plums!"
               description="Plums is a personal learning management system. It is a full stack website that allows a user to store information that they have acquired in a localized place, wether that be youtube videos on calculus or articles on geometry. This website was made using React, Tailwind, mongoDB, and netlify."
               :images="[
@@ -249,7 +249,7 @@
                   url: 'https://www.youtube.com/watch?v=fRTuhJUNvOc',
                 },
               ]"
-            ></ProjectComponent>
+            ></ProjectComponent> -->
 
             <!-- <ProjectComponent
               title="Holidea Board Games"
