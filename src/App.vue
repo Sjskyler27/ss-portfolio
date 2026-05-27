@@ -1,403 +1,850 @@
 <template>
-  <div id="app">
-    <div style="display: grid; grid-template-columns: 3fr auto">
-      <h1>Skyler Simpsons Portfolio</h1>
-      <div style="align-items: center">
-        <!-- <a
-          href="skylersimpson1-9-24.pdf"
-          target="_blank"
-          class="view-pdf-button"
+  <main id="app">
+    <header class="site-header">
+      <button class="brand" @click="setView('about')">
+        <span>Skyler Simpson</span>
+        <small>Full-stack developer</small>
+      </button>
+      <nav aria-label="Portfolio sections">
+        <button
+          v-for="item in navItems"
+          :key="item.id"
+          :class="{ active: currentView === item.id }"
+          @click="setView(item.id)"
         >
-          My Resume
-        </a> -->
-      </div>
-    </div>
-    <div id="centered-container">
-      <br />
-      <div class="menu">
-        <h1
-          :class="projectView === 'about' ? 'underline' : ''"
-          @click="projectView = 'about'"
-        >
-          About Me
-        </h1>
+          {{ item.label }}
+        </button>
+      </nav>
+      <a href="skylersimpson1-9-24.pdf" target="_blank" class="resume-link"> Resume </a>
+    </header>
 
-        <h1
-          :class="projectView === 'career' ? 'underline' : ''"
-          @click="projectView = 'career'"
-        >
-          Career Projects
-        </h1>
-        <h1
-          :class="projectView === 'school' ? 'underline' : ''"
-          @click="projectView = 'school'"
-        >
-          School Projects
-        </h1>
-      </div>
-      <div v-if="projectView == 'about'">
-        <br />
-        <AboutMe2></AboutMe2>
-      </div>
-      <div v-if="projectView == 'career'">
-        <div class="projects">
-          <div>
-            <ProjectComponent
-              title="Component Library"
-              description="I developed a comprehensive component library for OnDiem, designed to standardize and streamline the components used across our website. This library serves as a single, unified resource for our design and development teams, ensuring consistency and efficiency in our workflow. It provides an extensive catalog of all components in action, offering designers an easy and intuitive way to explore, understand, and implement these elements in their projects. This initiative has significantly enhanced our ability to maintain a cohesive and high-quality user experience throughout our digital platform."
-              :images="[
-                'component_library/image_1.png',
-                'component_library/image_2.png',
-                'component_library/image_3.png',
-              ]"
-              :links="[
-                {
-                  name: 'Component Library',
-                  url: 'https://ondiem.github.io/library/',
-                },
-              ]"
-            >
-            </ProjectComponent>
-            <ProjectComponent
-              title="Membership template"
-              description="I have reworked our adha membership page to allow us to account for other memberships. OnDiem has partnered with the CDHA to allow memberships and we anticipate that there will be more memberships in the future. I have created the memberships page to be able to account for future memberships with various partners"
-              :images="['cdha/1.png', 'cdha/2.png', 'cdha/3.png']"
-              :links="[]"
-            >
-            </ProjectComponent>
-            <ProjectComponent
-              title="State Partnerships"
-              description="OnDiem has partnered with many state associations through the ADHA. These partners wanted a page to share that would allow people to see what OnDiem had to offer. Prior to this outside users had to create an account 
-              before ever getting a chance to see what jobs might be available in their area. now with these partnerships users are able to view all the listings in a given state and use filters to find the best match. Users are even able to 
-              select a listing to see further details with a quick link to take them to the sign up page. Whenever we get a new state partnership we are able to quickly add them to our roster of partner states through our admin application."
-              :images="['state/1.png', 'state/2.png', 'state/3.png']"
-              :links="[]"
-            >
-            </ProjectComponent>
-          </div>
-          <div>
-            <ProjectComponent
-              title="Onboarding Proccess"
-              description="I enhanced the onboarding flow for our users by utilizing the 'overlay' module from the library to streamline the initial onboarding process. 
-              This project combined Basic Information, EEOC, Employee Handbook, Credentials, and Additional Verifications into a single flow. 
-               I implemented functionality that allows users to save their progress and resume the onboarding journey at any point, with notifications on the main dashboard that would return the user to their spot.
-               Previously a User had to have their state license approved before they could start applying for jobs. Now users can apply for jobs before being approved, substantially improving the application time.
-              Practices will only see applications from users that have been approved, and if a user is not approved they will receive an email notification to inform users if their credentials are declined. "
-              :images="[
-                'onboarding/1.png',
-                'onboarding/2.png',
-                'onboarding/3.png',
-                'onboarding/4.png',
-                'onboarding/5.png',
-              ]"
-              :links="[]"
-            >
-            </ProjectComponent>
-            <ProjectComponent
-              title="Subscriptions"
-              description="We are working on implementing a subscription service for our practices that will allow them special privileges such as converting temporary job posts to permanent reduced markup payments and other privileges."
-              :images="[
-                'subscriptions/1.png',
-                'subscriptions/2.png',
-                'subscriptions/3.png',
-                'subscriptions/4.png',
-              ]"
-              :links="[]"
-            >
-            </ProjectComponent>
-            <ProjectComponent
-              title="Practice Mobile Experience"
-              description="Our practice experience is getting ready for a major overhaul that will allow our practice to use a mobile browser. In its current state the Practice experience is configured only for desktop. I have created a pop up that will notify users once 
-              that we are working on the mobile experience. We give them the opportunity to receive a message when that experience is ready. I have started the first steps of our mobile enhancements by creating a menu drop down that will be used instead of the tabs on the 
-              side when you are on a smaller device."
-              :images="[
-                'practice_mobile/1.png',
-                'practice_mobile/2.png',
-                'practice_mobile/3.png',
-              ]"
-              :links="[]"
-            >
-            </ProjectComponent>
-          </div>
-        </div>
-      </div>
-      <div v-if="projectView == 'school'">
-        <div class="projects">
-          <div>
-            <ProjectComponent
-              title="Itch Programming for Kids!"
-              description="Itch is a programming website aimed to help children transition from block coding like scratch to coding with languages like python and VB. My team and I had 24 hours to complete this website as part of a hackathon. We created our website using Vue, HTML, CSS, Javascript, and netlify. We are very happy with our accomplishments and we were even awarded third place."
-              image="https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png"
-              :images="[
-                'https://d112y698adiu2z.cloudfront.net/photos/production/software_thumbnail_photos/002/629/889/datas/medium.png',
-                'https://i.ibb.co/PQGMGZv/image.png',
-                'https://i.ibb.co/YTL8WB3/image.png',
-              ]"
-              :links="[
-                {
-                  name: 'GitHub Repo',
-                  url: 'https://github.com/Sjskyler27/itch/',
-                },
-                { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-                {
-                  name: 'YouTube Demonstration',
-                  url: 'https://youtu.be/FZvFJNQyTms',
-                },
-                { name: 'Hackathon Competition', url: 'https://example.com' },
-              ]"
-            >
-            </ProjectComponent>
-            <ProjectComponent
-              title="Stonecrest Rentals"
-              description="I had the opportunity to work as a contractor for Stonecrest Rentals as a solo full stack developer. They had recently acquired another office building and had extra rooms that they were renting out to businesses. This was all being done through 
-              word of mouth. I worked closely with the company using Figma to create designs for the user and admin experience. We discussed the benefits of using a relational database for there needs, I created the schema in Dbdiagram and showed them how the relations could map to each other. Using Node, Sequelize, and Swagger I set up the skeleton for the backend and connected it to Render. I then got to work setting up the frontend using Vue and hosting it on Netlify. I worked between the two creating my components and controllers, presenting my progress to the company weekly using Jira to create sprints and tickets for myself. One of my goals for the project was to make something that the company could Easily maintain themselves, so I created the admin page that allows them to create edit and delete: rooms, new locations, amenities, etc. They are also able to easily edit the landing pages pricing info and text. they can even edit the website Title, logo and color scheme due to the use of SCSS."
-              :images="[
-                'https://i.ibb.co/7zZ23JW/image.png',
-                'https://i.ibb.co/Cm5Dm9t/image.png',
-                'https://i.ibb.co/6BBSyMC/image.png',
-                'https://i.ibb.co/bvNBrJk/image.png',
-              ]"
-              :links="[
-                {
-                  name: 'GitHub Repo',
-                  url: 'https://github.com/Sjskyler27/stonecrest-suites/',
-                },
-                {
-                  name: 'Loom Demonstration',
-                  url: 'https://www.loom.com/share/aba5b1c96d82414f93353d9c5e6bd76e',
-                },
-              ]"
-            ></ProjectComponent>
+    <section v-if="currentView === 'about'" class="page about-page">
+  <div class="about-copy">
+    <h2>
+      Full-stack developer focused on product workflows, AI-assisted development,
+      and building software people actually use.
+    </h2>
 
-            <ProjectComponent
-              title="Bot Predictions for HEAT "
-              description="This was a fun use of both Python and Excel; Excel is already a powerful tool 
-              on its own that I enjoy using however, when you combine it 
-              with openpyxl you can do just about anything. I found myself enjoying the board game HEAT very much, 
-              and wanted to get more maps for it. It was difficult to choose from the 30 different maps since they had no difficulty or time stats. So I took it upon
-              myself to determine these stats using the bot mechanics. In this game you can race against bots that have a specific logic for getting around the track based upon a deck of ten cards and some special
-              map indicators. Games were often close between the bots and the players so I knew that this would be a good indicator of the time stat. I created a python script that
-              had a bot class and a race function. The bot had functions such as getMapValues, draw card, move, and corner. The race function
-              would load the race track from the excel spreadsheet that had values such as distance from corners, distance from start, corner speed, etc.
-              Using this Python program I was able to run hundreds of simulations for every track and log a large amount of data. Time was easy to figure out 
-              since we could just multiply the amount of average turns it took a bot to finish the race by the average time our group of players took to complete
-              a turn. Difficulty was a little harder to determine. As I looked at the data I found a trend in what we considered the more dificult maps.
-              In those maps the bots had a corner rate higher than .5. a corner rate of .5 would mean that every other turn the car would pass a corner, i.e. turn 1 move 10 spaces
-              to the corner, turn 2 move 3 spaces past the corner. If your corner rate is higher than .5 sometimes you are passing a corner quickly. This
-              is easier for bots since they don't have to pay the penalty that players have to pay. Using this knowlage I was able to create a table that represented 
-              each tracks difficulty and time. I posted my findings on the forum and to my delight the times were accurate to within 2 or 3 minutes of my predictions.
-              And although the dificulty is harder to precisely measure I found that new players had a much harder time keeping up on maps that were marked with a higher
-              difficulty."
-              :images="[
-                'https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__imagepage/img/k4uPIqjYuWBzofFiCyjSWN6KJow=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6940449.png',
-                'https://cf.geekdo-images.com/GpyIgLpb_eSOsC9Y05nmyw__imagepage/img/enHJ780fj7F8GZsNLtzUylEdhVQ=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427299.png',
-                'https://cf.geekdo-images.com/S1KkjFX5vodPEcF94wGtHQ__imagepage/img/VWH3CKPqRsoHDQ1v76A5VGMMI_o=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427298.png',
-              ]"
-              :links="[
-                {
-                  name: 'Github Repo',
-                  url: 'https://github.com/Sjskyler27/HEATMAPTEST',
-                },
-                {
-                  name: 'Forum Post',
-                  url: 'https://boardgamegeek.com/thread/3055787/article/42258347#42258347',
-                },
-              ]"
-            ></ProjectComponent>
-          </div>
-          <div class="column2">
-            <ProjectComponent
-              title="CodeNames"
-              description="This Website is a recreation of the popular board game Code Names and its variant Code Names Duet. Code Names is a game were two teams are trying to guess all of their words before the other. Two code masters will look at their solution to give hints to their team. This full stack project had a lot of fun javascript problems that I enjoyed solving when it came to generating all of the solutions for the teams particularly in the duet version."
-              :images="[
-                'https://i.ibb.co/xhF5CxB/image.png',
-                'https://i.ibb.co/JjjNSGp/image.png',
-                'https://i.ibb.co/kKSWSnv/image.png',
-              ]"
-              :links="[
-                {
-                  name: 'GitHub Repo',
-                  url: 'https://github.com/Sjskyler27/codenames/',
-                },
-                {
-                  name: 'Live Demo',
-                  url: 'https://codenamesbyskyler.netlify.app/',
-                },
-                {
-                  name: 'YouTube Demonstration',
-                  url: 'https://youtu.be/837LC4l-2mg?si=4VBvupHLTMw_P1Qe',
-                },
-              ]"
-            ></ProjectComponent>
-            <!-- <ProjectComponent
-              title="Plums!"
-              description="Plums is a personal learning management system. It is a full stack website that allows a user to store information that they have acquired in a localized place, wether that be youtube videos on calculus or articles on geometry. This website was made using React, Tailwind, mongoDB, and netlify."
-              :images="[
-                'https://i.ibb.co/7Nz9N0m/image.png',
-                'https://i.ibb.co/0Yvcxcy/image.png',
-                'https://i.ibb.co/QmzMPQz/image.png',
-                'https://i.ibb.co/5Rt4xLS/image.png',
-              ]"
-              :links="[
-                {
-                  name: 'GitHub Repo',
-                  url: 'https://github.com/Sjskyler27/plums/',
-                },
-                { name: 'Live Demo', url: 'https://plms.netlify.app/' },
-                {
-                  name: 'YouTube Demonstration',
-                  url: 'https://www.youtube.com/watch?v=fRTuhJUNvOc',
-                },
-              ]"
-            ></ProjectComponent> -->
+    <p>
+      I work across frontend systems, backend services, mobile apps, and deployment
+      tooling with experience in Vue, Flutter, React, Node, and modern AI-assisted
+      engineering workflows.
+    </p>
 
-            <!-- <ProjectComponent
-              title="Holidea Board Games"
-              description="I had the opportunity to participate in a hackothon where we had to reach out to companies around us to find a problem to solve in 24 hours. we reached out to our local board game store to see what they might need and learned that they had no way of signing members in for there board game competitions and for renting games. so in 24 hours using django and python we created a fullstack application that they could use to keep track of there users, It included a picture a passcode and a member rank. members were then able to quickly sign in when they arrived and could proceed to enjoy there games.  "
-              :images="['']"
-              :links="[
-                { name: 'GitHub Repo', url: 'https://github.com/Sjskyler27/itch/' },
-                { name: 'Live Demo', url: 'https://itch.netlify.app/code' },
-                {
-                  name: 'YouTube Demonstration',
-                  url: 'https://youtu.be/FZvFJNQyTms',
-                },
-              ]"
-            ></ProjectComponent> -->
-          </div>
-        </div>
-      </div>
+    <p>
+      A lot of my work centers around improving messy operational processes —
+      onboarding, credentialing, admin tooling, automations, and internal workflows —
+      by turning them into maintainable products with clean user experiences.
+    </p>
+
+    <p>
+      I enjoy learning new stacks quickly, building practical systems end-to-end,
+      and combining product thinking with implementation.
+    </p>
+
+    <div class="about-actions">
+      <button @click="setView('projects')">See Projects</button>
+      <button @click="setView('experience')">View Experience</button>
     </div>
   </div>
+
+  <img src="./assets/photos/skylersimpson.jpg" alt="Skyler Simpson" />
+</section>
+
+    <section v-if="currentView === 'experience'" class="page experience-page">
+      <div class="page-heading">
+        <h1 class="eyebrow">Experience</h1>
+      </div>
+
+      <div class="experience-grid">
+  <article>
+    <span>OnDiem</span>
+    <h2>Full-stack product engineer</h2>
+    <p>
+      Built and maintained production web and mobile features across onboarding,
+      credentialing, shift workflows, admin tools, API integrations, and shared UI
+      systems using Vue, Flutter, and standardized client architecture.
+    </p>
+    <div class="tag-list">
+      <span>Vue</span>
+      <span>Flutter</span>
+      <span>API clients</span>
+      <span>Product workflows</span>
+    </div>
+  </article>
+
+  <article>
+    <span>Fox Run Suites</span>
+    <h2>AI workflow and automation consultant</h2>
+    <p>
+      Set up a Docker-based Codex development environment, structured AI-assisted
+      coding workflows, and documented repeatable processes for safely editing,
+      testing, and managing project code.
+    </p>
+    <div class="tag-list">
+      <span>Docker</span>
+      <span>Codex</span>
+      <span>Dev workflows</span>
+      <span>Automation</span>
+    </div>
+  </article>
+
+  <article>
+    <span>Stonecrest Rentals</span>
+    <h2>Full-stack contractor</h2>
+    <p>
+      Helped plan and build a rental platform from client requirements and Figma
+      designs through database modeling, Node backend scaffolding, React frontend
+      development, API documentation, hosting, and admin tooling.
+    </p>
+    <div class="tag-list">
+      <span>React</span>
+      <span>Node</span>
+      <span>Sequelize</span>
+      <span>Swagger</span>
+    </div>
+  </article>
+
+  <article>
+    <span>Personal projects</span>
+    <h2>Games, tools, and automation</h2>
+    <p>
+      Built browser games, Electron experiments, Home Assistant automations,
+      WebSocket prototypes, Python simulations, spreadsheet tooling, and deployable
+      demos focused on practical systems and interactive experiences.
+    </p>
+    <div class="tag-list">
+      <span>Electron</span>
+      <span>Python</span>
+      <span>WebSockets</span>
+      <span>Game logic</span>
+    </div>
+  </article>
+
+  <article>
+    <span>Education</span>
+    <h2>Software Engineering</h2>
+    <p>
+      Earned a BS in Software Engineering from BYU-Idaho with a Web Development
+      certificate, completing full-stack coursework, database projects, team builds,
+      and hackathon-style development work.
+    </p>
+    <div class="tag-list">
+      <span>Web development</span>
+      <span>Databases</span>
+      <span>Full-stack projects</span>
+    </div>
+  </article>
+</div>
+    </section>
+
+    <section v-if="currentView === 'projects'" class="page projects-page">
+      <div class="page-heading compact-heading">
+        <h1 class="eyebrow">Projects</h1>
+      </div>
+
+      <div class="project-grid">
+        <button
+          v-for="project in projects"
+          :key="project.id"
+          class="project-card"
+          @click="openProject(project)"
+        >
+          <img :src="resolveImage(project.images[0])" :alt="project.title" />
+          <div class="project-card-body">
+            <span class="project-type">{{ project.type }}</span>
+            <h2>{{ project.title }}</h2>
+            <p>{{ project.summary }}</p>
+            <div class="tag-list">
+              <span v-for="tech in project.tech" :key="tech">{{ tech }}</span>
+            </div>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <div
+      class="project-modal-backdrop"
+      v-if="projectModalOpen"
+      @click.self="closeProjectModal"
+    >
+      <article class="project-modal">
+        <button
+          class="modal-close"
+          @click="closeProjectModal"
+          aria-label="Close project details"
+        >
+          &times;
+        </button>
+        <div class="project-modal-copy">
+          <p class="eyebrow">{{ selectedProject.type }}</p>
+          <h2>{{ selectedProject.title }}</h2>
+          <p class="impact">{{ selectedProject.impact }}</p>
+          <p>{{ selectedProject.description }}</p>
+          <div class="tag-list modal-tags">
+            <span v-for="tech in selectedProject.tech" :key="tech">{{ tech }}</span>
+          </div>
+          <div class="detail-links" v-if="selectedProject.links.length">
+            <a
+              v-for="link in selectedProject.links"
+              :key="link.url"
+              :href="link.url"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {{ link.name }}
+            </a>
+          </div>
+        </div>
+
+        <div class="project-modal-media">
+          <div class="carousel">
+            <button @click="previousImage" aria-label="Previous image">&#8249;</button>
+            <div class="carousel-image-wrap" @click="imageModalOpen = true">
+              <img
+                :src="resolveImage(selectedProject.images[selectedImageIndex])"
+                :alt="selectedProject.title"
+              />
+              <span aria-hidden="true" class="magnify-icon">&#128269;</span>
+            </div>
+            <button @click="nextImage" aria-label="Next image">&#8250;</button>
+          </div>
+          <div class="thumbnail-row">
+            <button
+              v-for="(image, index) in selectedProject.images"
+              :key="image"
+              :class="{ active: selectedImageIndex === index }"
+              @click="selectedImageIndex = index"
+            >
+              <img
+                :src="resolveImage(image)"
+                :alt="`${selectedProject.title} ${index + 1}`"
+              />
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="image-modal" v-if="imageModalOpen" @click.self="imageModalOpen = false">
+      <button
+        class="modal-close"
+        @click="imageModalOpen = false"
+        aria-label="Close image"
+      >
+        &times;
+      </button>
+      <img
+        :src="resolveImage(selectedProject.images[selectedImageIndex])"
+        :alt="selectedProject.title"
+      />
+    </div>
+  </main>
 </template>
 
 <script>
-import AboutMe2 from './components/AboutMe2.vue'; // Import AboutMe
+import { projects } from "./data/projects";
 
 export default {
-  components: {
-    AboutMe2, // Register AboutMe as a child component
-  },
+  name: "App",
   data() {
     return {
-      projectView: 'career',
+      projects,
+      currentView: "about",
+      selectedProject: projects[0],
+      selectedImageIndex: 0,
+      projectModalOpen: false,
+      imageModalOpen: false,
+      navItems: [
+        { id: "about", label: "About" },
+        { id: "experience", label: "Experience" },
+        { id: "projects", label: "Projects" },
+      ],
     };
   },
-  mounted() {
-    // Scroll to the top of the page when the component is mounted
-    window.scrollTo(0, 0);
-    this.bootCodenames();
-    this.bootStoneCrest();
-  },
   methods: {
-    async bootStoneCrest() {
+    setView(view) {
+      this.currentView = view;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    openProject(project) {
+      this.selectedProject = project;
+      this.selectedImageIndex = 0;
+      this.projectModalOpen = true;
+      this.imageModalOpen = false;
+    },
+    closeProjectModal() {
+      this.projectModalOpen = false;
+      this.imageModalOpen = false;
+    },
+    resolveImage(image) {
+      if (!image) {
+        return "";
+      }
+      if (image.startsWith("http")) {
+        return image;
+      }
       try {
-        // eslint-disable-next-line no-unused-vars
-        const response = await fetch(
-          'https://stonecrast-api.onrender.com/api',
-          {
-            method: 'GET',
-          }
-        )
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            }
-          })
-          .then(data => {
-            console.log(data);
-          });
+        return require(`@/assets/photos/${image}`);
       } catch (error) {
-        console.error('Error fetching stonecrest data:', error);
+        return image;
       }
     },
-    async bootCodenames() {
-      try {
-        // eslint-disable-next-line no-unused-vars
-        const response = await fetch(
-          'https://codenamesdb.onrender.com/getAllCodes',
-          {
-            method: 'GET',
-          }
-        )
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            }
-          })
-          .then(data => {
-            console.log(data);
-          });
-      } catch (error) {
-        console.error('Error fetching Codenames data:', error);
-      }
+    previousImage() {
+      const imageCount = this.selectedProject.images.length;
+      this.selectedImageIndex = (this.selectedImageIndex - 1 + imageCount) % imageCount;
+    },
+    nextImage() {
+      const imageCount = this.selectedProject.images.length;
+      this.selectedImageIndex = (this.selectedImageIndex + 1) % imageCount;
     },
   },
 };
 </script>
 
 <style lang="scss">
-h1 {
-  color: #003d5b;
-  font-family: Century Gothic;
-  font-weight: 200;
-  font-size: 40px;
-  margin: 8px;
+* {
+  box-sizing: border-box;
 }
-.menu {
-  width: 80%;
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+#app {
+  margin: 0;
+  background: radial-gradient(
+      circle at top left,
+      rgba(255, 196, 87, 0.28),
+      transparent 32rem
+    ),
+    linear-gradient(135deg, #f8efe5 0%, #edf7f6 46%, #f6edf8 100%);
+  color: #213136;
+  font-family: "Century Gothic", Arial, sans-serif;
+  min-height:99vh;
+}
+
+button,
+a {
+  font-family: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  gap: 18px;
+  align-items: center;
+  border-bottom: 1px solid rgba(38, 113, 111, 0.2);
+  background: rgba(255, 250, 244, 0.9);
+  padding: 14px 28px;
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brand span {
+  display: block;
+  color: #193a5a;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.brand small {
+  color: #6b6474;
+}
+
+nav {
   display: flex;
-  justify-content: space-between;
-  padding-bottom: 20px;
-
-  h1 {
-    font-size: 30px;
-    cursor: pointer;
-  }
-  .underline {
-    text-decoration: underline;
-  }
+  gap: 8px;
 }
 
-#centered-container {
+nav button,
+.resume-link,
+.about-actions button,
+.detail-links a {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+nav button,
+.about-actions button {
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+nav button.active,
+nav button:hover,
+.about-actions button:first-child {
+  border-color: #193a5a;
+  background: #193a5a;
+  color: #ffffff;
+}
+
+.resume-link,
+.detail-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #f18f55;
+  color: #193a5a;
+  background: #fff7ed;
+}
+
+.page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 36px 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #a3442f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 780px;
+  color: #193a5a;
+  font-size: 42px;
+  line-height: 1.08;
+}
+
+h2 {
+  color: #193a5a;
+}
+
+p {
+  color: #5f5b68;
+  line-height: 1.55;
+}
+
+.about-page {
+  min-height: calc(100vh - 70px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 42px;
+  align-items: center;
+}
+
+.about-copy p {
+  max-width: 740px;
+  font-size: 18px;
+}
+
+.about-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center; /* Center items horizontally */
-  justify-content: center; /* Center items vertically */
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.about-actions button:last-child {
+  border-color: #f18f55;
+  background: rgba(255, 247, 237, 0.8);
+}
+
+.about-page img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 22px;
+}
+
+.page-heading h1 {
+  margin-bottom: 0;
+  font-size: 32px;
+}
+
+.compact-heading {
+  margin-bottom: 16px;
+}
+
+.experience-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.experience-grid article {
+  min-height: 255px;
+  border: 1px solid rgba(38, 113, 111, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 250, 244, 0.88);
+  padding: 22px;
+  box-shadow: 0 14px 30px rgba(25, 58, 90, 0.08);
+}
+
+.experience-grid article > span,
+.project-type {
+  color: #a3442f;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.experience-grid h2 {
+  margin: 10px 0;
+  font-size: 23px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.tag-list span {
+  border-radius: 999px;
+  background: #ddf3ef;
+  color: #17635f;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.project-card {
+  display: grid;
+  min-height: 210px;
+  overflow: hidden;
+  border: 1px solid rgba(38, 113, 111, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 250, 244, 0.9);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.project-card:hover,
+.project-card:focus-visible {
+  border-color: #26716f;
+  box-shadow: 0 16px 32px rgba(25, 58, 90, 0.15);
+}
+
+
+.project-card-body {
+  padding: 16px;
+}
+
+.project-card h2 {
+  margin: 8px 0;
+  font-size: 21px;
+}
+
+.project-card p {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+.project-card img {
+  width: 100%;             /* Fills the card's width */
+  height: 250px;           /* Forces the 250px height */
+  object-fit: cover;       /* Scales image to fill the space without distortion */
+  object-position: top;    /* Aligns the top of the image to the top of the container */
+}
+
+
+.impact {
+  color: #17635f;
+  font-weight: 800;
+}
+
+.carousel {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 8px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.carousel button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(38, 113, 111, 0.28);
+  border-radius: 50%;
+  background: #fff7ed;
+  color: #193a5a;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.carousel-image-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.carousel img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #14314f;
+  cursor: zoom-in;
+}
+
+.magnify-icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 250, 244, 0.92);
+  color: #193a5a;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(20, 49, 79, 0.22);
+}
+
+.detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-modal-backdrop,
+.image-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(25, 58, 90, 0.72);
+  padding: 28px;
+}
+
+.project-modal {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(290px, 0.75fr) minmax(0, 1.25fr);
+  gap: 26px;
+  width: min(1120px, 100%);
+  max-height: min(760px, calc(100vh - 56px));
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 247, 237, 0.98),
+    rgba(237, 247, 246, 0.98)
+  );
+  padding: 28px;
+  box-shadow: 0 24px 70px rgba(20, 49, 79, 0.35);
+}
+
+.project-modal h2 {
+  margin: 8px 44px 12px 0;
+  font-size: 34px;
+}
+
+.project-modal-copy p {
+  font-size: 15px;
+}
+
+.modal-tags {
+  margin-bottom: 18px;
+}
+
+.project-modal-media {
+  min-width: 0;
+}
+
+.thumbnail-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 96px;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.thumbnail-row button {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.thumbnail-row button.active {
+  border-color: #f18f55;
+}
+
+.thumbnail-row img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.image-modal img {
+  max-width: 92vw;
+  max-height: 86vh;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #14314f;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #193a5a;
+  color: #ffffff;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.image-modal .modal-close {
+  position: fixed;
 }
 
 ::-webkit-scrollbar {
-  width: 8px; /* Set the scrollbar width */
-  height: 8px; /* Set the scrollbar height */
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #5a7c8e; /* Set the thumb color */
-  border-radius: 4px; /* Round the thumb edges */
+  background-color: #193a5a;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #e5e5e5; /* Set the track color */
-  border-radius: 4px; /* Round the track edges */
+  background-color: #ffe9cb;
 }
-@media screen and (max-width: 650px) {
-  h1 {
-    font-size: 26px;
+
+@media screen and (max-width: 1050px) {
+  .about-page {
+    grid-template-columns: 1fr;
   }
-  .menu {
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 0px;
-    h1 {
-      font-size: 22px;
-    }
+
+  .project-modal {
+    grid-template-columns: 1fr;
+    max-height: calc(100vh - 36px);
+  }
+
+  .about-page img {
+    max-width: 320px;
   }
 }
-@media screen and (min-width: 1250px) {
-  .projects {
-    width: 100%;
+
+@media screen and (max-width: 760px) {
+  .site-header {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  nav {
+    overflow-x: auto;
+  }
+
+  .resume-link {
+    width: max-content;
+  }
+
+  .page {
+    width: min(100% - 22px, 1180px);
+    padding: 24px 0;
+  }
+
+  h1,
+  .page-heading h1 {
+    font-size: 30px;
+  }
+
+  .page-heading,
+  .experience-grid,
+  .project-grid {
     display: grid;
-    grid-template-columns: 50% 50%;
+    grid-template-columns: 1fr;
+  }
+
+  .project-card {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+}
+
+@media screen and (max-width: 520px) {
+
+
+  .project-modal-backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .project-modal {
+    width: 100%;
+    max-height: none;
+    min-height: 100vh;
+    border-radius: 0;
+    padding: 22px 14px;
+  }
+
+  .project-modal h2 {
+    font-size: 28px;
+  }
+
+  .carousel {
+    grid-template-columns: 32px minmax(0, 1fr) 32px;
+  }
+
+  .carousel button {
+    width: 32px;
+    height: 32px;
   }
 }
 </style>
