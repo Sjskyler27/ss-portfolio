@@ -1,0 +1,5 @@
+maybe make a trading card game version of my protfolio. it would have pictures and descriptions.
+
+add icons for commonn tools hovering over them will show my experiance with them
+
+each card could have icons listed for the verious tools. 
