@@ -35,7 +35,7 @@ export default {
 
 .card {
   color: white;
-  background-image: url(../assets/photos/skylersimpson.jpg);
+  background-image: url(../assets/photos/skylersimpson.png);
   background-size: cover;
   padding: 30rem 0 0;
   max-width: 75ch;
