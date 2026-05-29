@@ -7,7 +7,7 @@
     <div id="about-me-inner">
       <div v-if="!showAboutMe" class="profile-image-container">
         <img
-          src="../assets/photos/skylersimpson.jpg"
+        src="../assets/photos/skylersimpson.png"
           alt="Profile Image"
           class="profile-image"
         />
