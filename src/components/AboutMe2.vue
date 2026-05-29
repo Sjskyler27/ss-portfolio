@@ -13,7 +13,7 @@
         free to check out my website below where you can learn more and view my
         full portfolio.
       </p>
-      <a href="skylersimpson1-9-24.pdf" target="_blank" class="view-pdf-button">
+      <a href="Resume6-1.pdf" target="_blank" class="view-pdf-button">
         My Resume
       </a>
     </div>
@@ -35,7 +35,7 @@ export default {
 
 .card {
   color: white;
-  background-image: url(../assets/photos/skylersimpson.jpg);
+  background-image: url(../assets/photos/skylersimpson.png);
   background-size: cover;
   padding: 30rem 0 0;
   max-width: 75ch;

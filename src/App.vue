@@ -15,7 +15,7 @@
           {{ item.label }}
         </button>
       </nav>
-      <a href="skylersimpson1-9-24.pdf" target="_blank" class="resume-link"> Resume </a>
+      <a href="Resume6-1.pdf" target="_blank" class="resume-link"> Resume </a>
     </header>
 
     <section v-if="currentView === 'about'" class="page about-page">
@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <img src="./assets/photos/skylersimpson.jpg" alt="Skyler Simpson" />
+  <img src="./assets/photos/skylersimpson.png" alt="Skyler Simpson" />
 </section>
 
     <section v-if="currentView === 'experience'" class="page experience-page">
@@ -782,17 +782,34 @@ p {
 
 @media screen and (max-width: 760px) {
   .site-header {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px 6px;
     padding: 12px 16px;
   }
 
+  .brand {
+    grid-column: 1 / -1;
+  }
+
   nav {
-    overflow-x: auto;
+    display: grid;
+    grid-column: 1 / span 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
   }
 
   .resume-link {
-    width: max-content;
+    grid-column: 4;
+    width: auto;
+  }
+
+  nav button,
+  .resume-link {
+    min-width: 0;
+    padding: 0 5px;
+    font-size: 12px;
+    white-space: nowrap;
   }
 
   .page {
