@@ -13,7 +13,7 @@
         free to check out my website below where you can learn more and view my
         full portfolio.
       </p>
-      <a href="skylersimpson1-9-24.pdf" target="_blank" class="view-pdf-button">
+      <a href="Resume6-1.pdf" target="_blank" class="view-pdf-button">
         My Resume
       </a>
     </div>

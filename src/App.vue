@@ -15,7 +15,7 @@
           {{ item.label }}
         </button>
       </nav>
-      <a href="skylersimpson1-9-24.pdf" target="_blank" class="resume-link"> Resume </a>
+      <a href="Resume6-1.pdf" target="_blank" class="resume-link"> Resume </a>
     </header>
 
     <section v-if="currentView === 'about'" class="page about-page">
