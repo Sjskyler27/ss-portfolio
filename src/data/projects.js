@@ -76,6 +76,31 @@ export const projects = [
     tech: ['Vue', 'Forms', 'Dashboard UX', 'Credentialing'],
     links: [],
   },
+    {
+    id: 'wordis',
+    title: 'Wordis',
+    type: 'Hackathon',
+    category: 'featured',
+    group: 'hackathon',
+    summary:
+      'A bananagrams rogue like developed in vue and deployed with electron created for a 2 week hackathon',
+    impact:
+      'Built the full game loop, CSS animation system, persistent saves, offline support, controller support, and a playable web release.',
+    description:
+  'In just two weeks I created a full fledged Bananagrams-inspired roguelike using Vue and Electron. The project features local saves for offline play, Firebase login and cloud sync across devices, controller support, animated UI systems, and a complete gameplay loop inspired by modern roguelikes like Balatro. I handled the full frontend architecture, game state management, progression systems, persistence layer, responsive layouts, and deployment pipeline for the playable web release.',
+  images: [
+      'wordis/1.png',
+      'wordis/2.png',
+      'wordis/3.png',
+    ],
+    tech: ['Vue', 'Firebase', 'Electron', 'SCSS', 'Local Storage', 'Netlify'],
+    links: [
+      {
+        name: 'Play Wordis',
+        url: 'https://wavedash.com/games/wordis',
+      },
+    ],
+  },
   {
   id: 'stonecrest',
   title: 'Stonecrest Rentals',
