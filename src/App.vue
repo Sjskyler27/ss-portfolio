@@ -262,20 +262,73 @@ export default {
       ],
     };
   },
+  mounted() {
+    this.syncViewFromUrl();
+    window.addEventListener("popstate", this.syncViewFromUrl);
+  },
+  beforeUnmount() {
+    window.removeEventListener("popstate", this.syncViewFromUrl);
+  },
   methods: {
-    setView(view) {
+    setView(view, updateUrl = true) {
       this.currentView = view;
+      this.projectModalOpen = false;
+      this.imageModalOpen = false;
+      if (updateUrl) {
+        const path = view === "about" ? "/" : `/${view}`;
+        this.updatePath(path);
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    openProject(project) {
+    openProject(project, updateUrl = true) {
       this.selectedProject = project;
+      this.currentView = "projects";
       this.selectedImageIndex = 0;
       this.projectModalOpen = true;
       this.imageModalOpen = false;
+      if (updateUrl) {
+        this.updatePath(`/projects/${project.id}`);
+      }
     },
-    closeProjectModal() {
+    closeProjectModal(updateUrl = true) {
       this.projectModalOpen = false;
       this.imageModalOpen = false;
+      if (updateUrl) {
+        this.updatePath("/projects");
+      }
+    },
+    syncViewFromUrl() {
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      const [section, projectId] = pathParts;
+
+      if (section === "projects") {
+        this.currentView = "projects";
+
+        if (projectId) {
+          const decodedProjectId = decodeURIComponent(projectId);
+          const project = this.projects.find(({ id }) => id === decodedProjectId);
+
+          if (project) {
+            this.openProject(project, false);
+            return;
+          }
+        }
+
+        this.closeProjectModal(false);
+        return;
+      }
+
+      if (section === "experience") {
+        this.setView("experience", false);
+        return;
+      }
+
+      this.setView("about", false);
+    },
+    updatePath(path) {
+      if (window.location.pathname !== path) {
+        window.history.pushState({}, "", path);
+      }
     },
     resolveImage(image) {
       if (!image) {
