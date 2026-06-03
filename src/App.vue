@@ -718,7 +718,7 @@ p {
   grid-template-columns: minmax(290px, 0.75fr) minmax(0, 1.25fr);
   gap: 26px;
   width: min(1120px, 100%);
-  max-height: min(760px, calc(100vh - 56px));
+  max-height: min(980px, calc(100vh - 56px));
   overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 8px;
