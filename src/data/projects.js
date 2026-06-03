@@ -29,7 +29,7 @@ export const projects = [
   links: [],
 },
 
-{ id: 'healthcare_app', title: 'Healthcare Data Platform', type: 'Personal Project', category: 'featured', group: 'fullstack', summary: 'A full-stack healthcare platform built with Django, PostgreSQL, and React focused on patient, encounter, and condition data management.', impact: 'Designed the relational database architecture, imported large synthetic healthcare datasets through ETL pipelines, built admin tooling, and created authenticated healthcare workflows.', description: 'This project was created to deepen my experience with backend engineering, healthcare data systems, and full-stack architecture. The platform uses Django and PostgreSQL to model healthcare relationships between patients, encounters, and medical conditions while supporting authenticated admin workflows and scalable data management practices. I built ETL scripts to process and import synthetic Synthea healthcare datasets into a normalized PostgreSQL schema, allowing realistic testing against large relational datasets. The project also includes Django admin tooling, role-based access controls, REST-ready backend architecture, and a React frontend environment prepared for future patient and analytics interfaces. Along the way I gained hands-on experience with database migrations, ORM relationships, ETL concepts, PostgreSQL administration, Docker-based tooling, and healthcare-oriented backend design.', images: [ 'healthcare_app/1.png', 'healthcare_app/2.png', 'healthcare_app/3.png', ], tech: [ 'Django', 'Python', 'PostgreSQL', 'React', 'Docker', 'REST APIs', 'ETL', 'pgAdmin','Synthia' ], links: [ { name: 'View Repository', url: 'https://github.com/yourusername/healthcare-app', }, ], },
+{ id: 'healthcare_app', title: 'Healthcare Data Platform', type: 'Personal Project', category: 'featured', group: 'fullstack', summary: 'A full-stack healthcare platform built with Django, PostgreSQL, and React focused on patient, encounter, and condition data management.', impact: 'Designed the relational database architecture, imported large synthetic healthcare datasets through ETL pipelines, built admin tooling, and created authenticated healthcare workflows.', description: 'This project was created to deepen my experience with backend engineering, healthcare data systems, and full-stack architecture. The platform uses Django and PostgreSQL to model healthcare relationships between patients, encounters, and medical conditions while supporting authenticated admin workflows and scalable data management practices. I built ETL scripts to process and import synthetic Synthea healthcare datasets into a normalized PostgreSQL schema, allowing realistic testing against large relational datasets. The project also includes Django admin tooling, role-based access controls, REST-ready backend architecture, and a React frontend environment prepared for future patient and analytics interfaces. Along the way I gained hands-on experience with database migrations, ORM relationships, ETL concepts, PostgreSQL administration, Docker-based tooling, and healthcare-oriented backend design.', images: [ 'healthcare_app/1.png', 'healthcare_app/2.png', 'healthcare_app/3.png', ], tech: [ 'Django', 'Python', 'PostgreSQL', 'React', 'Docker', 'REST APIs', 'ETL', 'pgAdmin','Synthia' ], links: [ { name: 'GitLab Repo', url: 'https://gitlab.com/Sjskyler27/healthcare_app' },{name:'Demo', url: 'https://healthcaretestapp.netlify.app/'} ], },
 {
     id: 'component-library',
     title: 'Component Library',
@@ -137,12 +137,16 @@ export const projects = [
 
   links: [
     {
-      name: 'GitHub Repo',
-      url: 'https://github.com/Sjskyler27/stonecrest-suites/',
+      name: 'GitHub Backend Repo',
+      url: 'https://github.com/Sjskyler27/stonecrest-suites-backend',
     },
     {
-      name: 'Loom Demonstration',
-      url: 'https://www.loom.com/share/aba5b1c96d82414f93353d9c5e6bd76e',
+      name: 'Github Frontend Repo',
+      url: 'https://github.com/Sjskyler27/stonecrest-suites'
+    },
+    {
+      name: 'Demo',
+      url: 'https://stoncrestsuites.netlify.app',
     },
   ],
 },
