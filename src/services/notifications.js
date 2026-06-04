@@ -123,7 +123,7 @@ function addActivity(activity) {
 function getDedupeKey(payload) {
   const source = payload.source || "unknown";
   const event = payload.event || "site_view";
-  const target = payload.projectId || payload.path || "/";
+  const target = payload.externalUrl || payload.projectId || payload.path || "/";
 
   return `portfolio-notify:${event}:${source}:${target}`;
 }
@@ -227,6 +227,28 @@ export function notifyProjectView(project, path = window.location.pathname) {
 
   if (!hasAlreadySent(payload)) {
     addActivity(`Viewed ${project.id}`);
+    sendPayload(payload);
+  }
+}
+
+export function notifyExternalSite(link, project, path = window.location.pathname) {
+  if (!link || !link.url) {
+    return;
+  }
+
+  const payload = withSession({
+    event: "external_site",
+    externalLabel: link.name || link.url,
+    externalUrl: link.url,
+    path,
+    projectId: project && project.id,
+    projectTitle: project && project.title,
+    source: getSource(),
+    referrer: document.referrer,
+  });
+
+  if (!hasAlreadySent(payload)) {
+    addActivity(`external-site: ${payload.externalLabel}`);
     sendPayload(payload);
   }
 }
