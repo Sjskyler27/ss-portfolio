@@ -1,19 +1,15 @@
+import { notificationNames } from "../data/notificationNames";
+
 const notificationPath = "/.netlify/functions/notify-view";
 const activityKey = "portfolio-notify-activities";
+const activeStateKey = "portfolio-notify-active-state";
 const sessionClosedKey = "portfolio-notify-session-closed";
 const sessionInfoKey = "portfolio-notify-session";
 const sessionCountKey = "portfolio-notify-session-count";
+const sourceKey = "portfolio-notify-source";
 const userKey = "portfolio-notify-user";
-const userNames = [
-  "Bird",
-  "Fox",
-  "Oak",
-  "River",
-  "Maple",
-  "Cedar",
-  "Pine",
-  "Stone",
-];
+
+let activeTimerInitialized = false;
 
 function getNotificationEndpoint() {
   if (process.env.NODE_ENV === "development" && window.location.port === "8080") {
@@ -25,7 +21,14 @@ function getNotificationEndpoint() {
 
 function getSource() {
   const params = new URLSearchParams(window.location.search);
-  return params.get("source") || "";
+  const source = params.get("source");
+
+  if (source) {
+    setStoredValue(localStorage, sourceKey, source);
+    return source;
+  }
+
+  return getStoredValue(localStorage, sourceKey);
 }
 
 function getStoredValue(storage, key) {
@@ -44,8 +47,80 @@ function setStoredValue(storage, key, value) {
   }
 }
 
+function getActiveState() {
+  try {
+    return JSON.parse(
+      sessionStorage.getItem(activeStateKey) ||
+        '{"activeMs":0,"lastMessageActiveMs":0,"visibleStartedAt":0}'
+    );
+  } catch (error) {
+    return {
+      activeMs: 0,
+      lastMessageActiveMs: 0,
+      visibleStartedAt: 0,
+    };
+  }
+}
+
+function saveActiveState(state) {
+  setStoredValue(sessionStorage, activeStateKey, JSON.stringify(state));
+}
+
+function syncActiveState() {
+  const state = getActiveState();
+  const now = Date.now();
+
+  if (state.visibleStartedAt) {
+    state.activeMs += Math.max(0, now - state.visibleStartedAt);
+  }
+
+  state.visibleStartedAt = document.visibilityState === "visible" ? now : 0;
+  saveActiveState(state);
+  return state;
+}
+
+function initializeActiveTimer() {
+  if (activeTimerInitialized) {
+    return;
+  }
+
+  activeTimerInitialized = true;
+
+  if (!getStoredValue(sessionStorage, activeStateKey)) {
+    saveActiveState({
+      activeMs: 0,
+      lastMessageActiveMs: 0,
+      visibleStartedAt: document.visibilityState === "visible" ? Date.now() : 0,
+    });
+  } else {
+    syncActiveState();
+  }
+
+  document.addEventListener("visibilitychange", syncActiveState);
+}
+
+function withInteractionTiming(payload) {
+  const state = syncActiveState();
+  const secondsSinceLastInteraction = Math.max(
+    0,
+    Math.round((state.activeMs - state.lastMessageActiveMs) / 1000)
+  );
+
+  return {
+    ...payload,
+    secondsSinceLastInteraction,
+  };
+}
+
+function markMessageSent() {
+  const state = syncActiveState();
+  state.lastMessageActiveMs = state.activeMs;
+  saveActiveState(state);
+}
+
 function generateUserName() {
-  const name = userNames[Math.floor(Math.random() * userNames.length)];
+  const name =
+    notificationNames[Math.floor(Math.random() * notificationNames.length)] || "Guest";
   const suffix =
     window.crypto && window.crypto.getRandomValues
       ? window.crypto.getRandomValues(new Uint16Array(1))[0] % 90
@@ -67,6 +142,8 @@ function getUserName() {
 }
 
 function getSessionInfo() {
+  initializeActiveTimer();
+
   const existingSession = getStoredValue(sessionStorage, sessionInfoKey);
 
   if (existingSession) {
@@ -87,6 +164,11 @@ function getSessionInfo() {
   setStoredValue(localStorage, sessionCountKey, String(session.sessionNumber));
   setStoredValue(sessionStorage, sessionInfoKey, JSON.stringify(session));
   setStoredValue(sessionStorage, activityKey, JSON.stringify([]));
+  saveActiveState({
+    activeMs: 0,
+    lastMessageActiveMs: 0,
+    visibleStartedAt: document.visibilityState === "visible" ? Date.now() : 0,
+  });
   sessionStorage.removeItem(sessionClosedKey);
 
   return session;
@@ -145,13 +227,15 @@ function hasAlreadySent(payload) {
 }
 
 function sendPayload(payload, options = {}) {
-  const body = JSON.stringify(payload);
+  const payloadWithTiming = withInteractionTiming(payload);
+  const body = JSON.stringify(payloadWithTiming);
   const isProduction = process.env.NODE_ENV === "production";
 
   if ((isProduction || options.preferBeacon) && navigator.sendBeacon) {
     const blob = new Blob([body], { type: "application/json" });
 
     if (navigator.sendBeacon(getNotificationEndpoint(), blob)) {
+      markMessageSent();
       return;
     }
   }
@@ -169,6 +253,9 @@ function sendPayload(payload, options = {}) {
           response.status,
           response.statusText
         );
+      }
+      if (response.ok) {
+        markMessageSent();
       }
     })
     .catch((error) => {
