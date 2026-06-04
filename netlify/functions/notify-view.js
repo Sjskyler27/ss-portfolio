@@ -5,6 +5,7 @@ const allowedEvents = new Set([
   "project_view",
   "session_end",
 ]);
+const suppressNotificationsFlag = 1 << 12;
 const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -128,6 +129,14 @@ function formatDiscordMessage(payload) {
   return lines.join("\n");
 }
 
+function getMessageFlags(payload) {
+  if (payload.isSessionStart) {
+    return 0;
+  }
+
+  return suppressNotificationsFlag;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return {
@@ -148,12 +157,13 @@ exports.handler = async (event) => {
 
   const payload = parseBody(event);
   const content = formatDiscordMessage(payload);
+  const flags = getMessageFlags(payload);
 
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, flags }),
     });
 
     if (response.ok) {
