@@ -59,85 +59,15 @@
       </div>
 
       <div class="experience-grid">
-  <article>
-    <span>OnDiem</span>
-    <h2>Full-stack product engineer</h2>
-    <p>
-      Built and maintained production web and mobile features across onboarding,
-      credentialing, shift workflows, admin tools, API integrations, and shared UI
-      systems using Vue, Flutter, and standardized client architecture.
-    </p>
-    <div class="tag-list">
-      <span>Vue</span>
-      <span>Flutter</span>
-      <span>API clients</span>
-      <span>Product workflows</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Fox Run Suites</span>
-    <h2>AI workflow and automation consultant</h2>
-    <p>
-      Set up a Docker-based Codex development environment, structured AI-assisted
-      coding workflows, and documented repeatable processes for safely editing,
-      testing, and managing project code.
-    </p>
-    <div class="tag-list">
-      <span>Docker</span>
-      <span>Codex</span>
-      <span>Dev workflows</span>
-      <span>Automation</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Stonecrest Rentals</span>
-    <h2>Full-stack contractor</h2>
-    <p>
-      Helped plan and build a rental platform from client requirements and Figma
-      designs through database modeling, Node backend scaffolding, React frontend
-      development, API documentation, hosting, and admin tooling.
-    </p>
-    <div class="tag-list">
-      <span>React</span>
-      <span>Node</span>
-      <span>Sequelize</span>
-      <span>Swagger</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Personal projects</span>
-    <h2>Games, tools, and automation</h2>
-    <p>
-      Built browser games, Electron experiments, Home Assistant automations,
-      WebSocket prototypes, Python simulations, spreadsheet tooling, and deployable
-      demos focused on practical systems and interactive experiences.
-    </p>
-    <div class="tag-list">
-      <span>Electron</span>
-      <span>Python</span>
-      <span>WebSockets</span>
-      <span>Game logic</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Education</span>
-    <h2>Software Engineering</h2>
-    <p>
-      Earned a BS in Software Engineering from BYU-Idaho with a Web Development
-      certificate, completing full-stack coursework, database projects, team builds,
-      and hackathon-style development work.
-    </p>
-    <div class="tag-list">
-      <span>Web development</span>
-      <span>Databases</span>
-      <span>Full-stack projects</span>
-    </div>
-  </article>
-</div>
+        <article v-for="item in experienceItems" :key="item.organization">
+          <span>{{ item.organization }}</span>
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.description }}</p>
+          <div class="tag-list">
+            <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section v-else-if="currentView === 'projects'" key="projects" class="page projects-page">
@@ -261,6 +191,7 @@
 </template>
 
 <script>
+import { experienceItems } from "./data/experience";
 import { projects } from "./data/projects";
 import {
   getLandingProjectId,
@@ -279,6 +210,7 @@ export default {
   name: "App",
   data() {
     return {
+      experienceItems,
       projects,
       currentView: "about",
       previousView: "",
