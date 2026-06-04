@@ -6,6 +6,13 @@ const allowedEvents = new Set([
   "session_end",
 ]);
 const suppressNotificationsFlag = 1 << 12;
+const ignoredUserAgents = [
+  "chrome-lighthouse",
+  "google page speed",
+  "lighthouse",
+  "netlify",
+  "pagespeed",
+];
 const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -158,6 +165,15 @@ function getMessageFlags(payload) {
   return suppressNotificationsFlag;
 }
 
+function isIgnoredUserAgent(headers = {}) {
+  const userAgent = cleanValue(headers["user-agent"] || headers["User-Agent"], 300)
+    .toLowerCase();
+
+  return ignoredUserAgents.some((ignoredUserAgent) =>
+    userAgent.includes(ignoredUserAgent)
+  );
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return {
@@ -168,6 +184,13 @@ exports.handler = async (event) => {
 
   if (event.httpMethod !== "POST") {
     return jsonResponse(405, { error: "Method not allowed" });
+  }
+
+  if (isIgnoredUserAgent(event.headers)) {
+    return {
+      statusCode: 204,
+      headers: corsHeaders,
+    };
   }
 
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
