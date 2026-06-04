@@ -8,6 +8,7 @@ const sessionInfoKey = "portfolio-notify-session";
 const sessionCountKey = "portfolio-notify-session-count";
 const sourceKey = "portfolio-notify-source";
 const userKey = "portfolio-notify-user";
+const disableWebhookKey = "disable_discord_webhook";
 
 let activeTimerInitialized = false;
 
@@ -22,6 +23,11 @@ function getNotificationEndpoint() {
 function getSource() {
   const params = new URLSearchParams(window.location.search);
   const source = params.get("source");
+
+  if (source === "none") {
+    setStoredValue(localStorage, disableWebhookKey, "true");
+    return "";
+  }
 
   if (source) {
     setStoredValue(localStorage, sourceKey, source);
@@ -227,6 +233,10 @@ function hasAlreadySent(payload) {
 }
 
 function sendPayload(payload, options = {}) {
+  if (getStoredValue(localStorage, disableWebhookKey)) {
+    return;
+  }
+
   const payloadWithTiming = withInteractionTiming(payload);
   const body = JSON.stringify(payloadWithTiming);
   const isProduction = process.env.NODE_ENV === "production";
