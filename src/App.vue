@@ -244,6 +244,10 @@
 
 <script>
 import { projects } from "./data/projects";
+import {
+  notifyPortfolioView,
+  notifyProjectView,
+} from "./services/notifications";
 
 export default {
   name: "App",
@@ -264,6 +268,7 @@ export default {
   },
   mounted() {
     this.syncViewFromUrl();
+    notifyPortfolioView();
     window.addEventListener("popstate", this.syncViewFromUrl);
   },
   beforeUnmount() {
@@ -289,6 +294,7 @@ export default {
       if (updateUrl) {
         this.updatePath(`/projects/${project.id}`);
       }
+      notifyProjectView(project);
     },
     closeProjectModal(updateUrl = true) {
       this.projectModalOpen = false;
@@ -326,9 +332,22 @@ export default {
       this.setView("about", false);
     },
     updatePath(path) {
-      if (window.location.pathname !== path) {
-        window.history.pushState({}, "", path);
+      const nextPath = this.withSourceQuery(path);
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+
+      if (currentPath !== nextPath) {
+        window.history.pushState({}, "", nextPath);
       }
+    },
+    withSourceQuery(path) {
+      const source = new URLSearchParams(window.location.search).get("source");
+
+      if (!source || path.includes("?")) {
+        return path;
+      }
+
+      const params = new URLSearchParams({ source });
+      return `${path}?${params.toString()}`;
     },
     resolveImage(image) {
       if (!image) {
