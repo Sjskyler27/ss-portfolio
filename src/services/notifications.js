@@ -232,8 +232,37 @@ function hasAlreadySent(payload) {
   return false;
 }
 
-function sendPayload(payload, options = {}) {
+function isAutomatedPageLoad() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const botUserAgents = [
+    "chrome-lighthouse",
+    "google page speed",
+    "lighthouse",
+    "netlify",
+    "pagespeed",
+  ];
+
+  return (
+    navigator.webdriver ||
+    document.prerendering ||
+    botUserAgents.some((botUserAgent) => userAgent.includes(botUserAgent))
+  );
+}
+
+function shouldSendNotifications() {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return false;
+  }
+
   if (getStoredValue(localStorage, disableWebhookKey)) {
+    return false;
+  }
+
+  return !isAutomatedPageLoad();
+}
+
+function sendPayload(payload, options = {}) {
+  if (!shouldSendNotifications()) {
     return;
   }
 
