@@ -9,10 +9,10 @@
         <button
           v-for="item in navItems"
           :key="item.id"
-          :class="{ active: currentView === item.id }"
+          :class="getNavButtonClass(item.id)"
           @click="setView(item.id)"
         >
-          {{ item.label }}
+          <span>{{ item.label }}</span>
         </button>
       </nav>
       <a href="Resume6-1.pdf" target="_blank" class="resume-link"> Resume </a>
@@ -267,11 +267,15 @@ export default {
     return {
       projects,
       currentView: "about",
+      previousView: "",
       selectedProject: projects[0],
       selectedImageIndex: 0,
       projectModalOpen: false,
       imageModalOpen: false,
-      pageTransitionName: "page-swipe-forward",
+      hasMountedPage: false,
+      navExitDirection: "nav-fill-back",
+      navFillDirection: "nav-fill-forward",
+      pageTransitionName: "page-arrive",
       navItems: [
         { id: "about", label: "About" },
         { id: "experience", label: "Experience" },
@@ -351,7 +355,10 @@ export default {
       this.setView("about", false);
     },
     setCurrentView(view) {
+      const isInitialPage = !this.hasMountedPage;
+
       if (view === this.currentView) {
+        this.hasMountedPage = true;
         return;
       }
 
@@ -359,8 +366,26 @@ export default {
       const nextIndex = this.navItems.findIndex(({ id }) => id === view);
 
       this.pageTransitionName =
-        nextIndex >= currentIndex ? "page-swipe-forward" : "page-swipe-back";
+        isInitialPage || currentIndex < 0
+          ? "page-arrive"
+          : nextIndex >= currentIndex
+          ? "page-swipe-forward"
+          : "page-swipe-back";
+      this.navFillDirection =
+        isInitialPage || nextIndex >= currentIndex ? "nav-fill-forward" : "nav-fill-back";
+      this.navExitDirection =
+        this.navFillDirection === "nav-fill-forward" ? "nav-fill-back" : "nav-fill-forward";
+      this.previousView = this.currentView;
       this.currentView = view;
+      this.hasMountedPage = true;
+    },
+    getNavButtonClass(view) {
+      return {
+        active: this.currentView === view,
+        exiting: this.previousView === view && this.currentView !== view,
+        [this.navFillDirection]: this.currentView === view,
+        [this.navExitDirection]: this.previousView === view && this.currentView !== view,
+      };
     },
     updatePath(path) {
       const nextPath = this.withSourceQuery(path);
@@ -496,17 +521,70 @@ nav button,
 
 nav button,
 .about-actions button {
+  position: relative;
+  overflow: hidden;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
 }
 
-nav button.active,
-nav button:hover,
+nav button {
+  isolation: isolate;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+nav button span {
+  position: relative;
+  z-index: 1;
+}
+
+nav button::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: #193a5a;
+  content: "";
+  transform: scaleX(0);
+  transition: transform 260ms ease;
+}
+
+nav button.active {
+  border-color: transparent;
+  background: transparent;
+  color: #ffffff;
+}
+
 .about-actions button:first-child {
   border-color: #193a5a;
   background: #193a5a;
   color: #ffffff;
+}
+
+nav button.nav-fill-forward::before {
+  transform-origin: left center;
+}
+
+nav button.nav-fill-back::before {
+  transform-origin: right center;
+}
+
+nav button.active::before {
+  transform: scaleX(1);
+}
+
+nav button:not(.active):hover {
+  border-color: #193a5a;
+  background: transparent;
+  color: #193a5a;
+}
+
+nav button:focus-visible {
+  outline: 2px solid #f18f55;
+  outline-offset: 2px;
 }
 
 .resume-link,
@@ -528,6 +606,26 @@ nav button:hover,
 .page-stage {
   position: relative;
   overflow: hidden;
+}
+
+.page-arrive-enter-active {
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease,
+    visibility 420ms ease;
+  will-change: opacity, transform;
+}
+
+.page-arrive-enter-from {
+  opacity: 0;
+  transform: translateY(34px);
+  visibility: hidden;
+}
+
+.page-arrive-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .page-swipe-forward-enter-active,
@@ -957,6 +1055,7 @@ p {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .page-arrive-enter-active,
   .page-swipe-forward-enter-active,
   .page-swipe-forward-leave-active,
   .page-swipe-back-enter-active,
