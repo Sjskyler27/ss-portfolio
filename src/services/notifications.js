@@ -1,19 +1,11 @@
+import { notificationNames } from "../data/notificationNames";
+
 const notificationPath = "/.netlify/functions/notify-view";
 const activityKey = "portfolio-notify-activities";
 const sessionClosedKey = "portfolio-notify-session-closed";
 const sessionInfoKey = "portfolio-notify-session";
 const sessionCountKey = "portfolio-notify-session-count";
 const userKey = "portfolio-notify-user";
-const userNames = [
-  "Bird",
-  "Fox",
-  "Oak",
-  "River",
-  "Maple",
-  "Cedar",
-  "Pine",
-  "Stone",
-];
 
 function getNotificationEndpoint() {
   if (process.env.NODE_ENV === "development" && window.location.port === "8080") {
@@ -45,7 +37,8 @@ function setStoredValue(storage, key, value) {
 }
 
 function generateUserName() {
-  const name = userNames[Math.floor(Math.random() * userNames.length)];
+  const name =
+    notificationNames[Math.floor(Math.random() * notificationNames.length)] || "Guest";
   const suffix =
     window.crypto && window.crypto.getRandomValues
       ? window.crypto.getRandomValues(new Uint16Array(1))[0] % 90
