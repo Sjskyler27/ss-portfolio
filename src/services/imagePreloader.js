@@ -50,6 +50,11 @@ function getLandingProject(projects, path) {
   return projects.find(({ id }) => id === decodedProjectId) || null;
 }
 
+function getLandingProjectId(projects, path = window.location.pathname) {
+  const landingProject = getLandingProject(projects, path);
+  return (landingProject && landingProject.id) || "";
+}
+
 function getProjectImages(projects) {
   return projects.flatMap(({ images }) => images || []);
 }
@@ -85,6 +90,11 @@ export async function preloadPortfolioImages(projects, path = window.location.pa
   }
 
   preloadRemainingImages(allImages);
+
+  return {
+    landingProjectId: landingProject && landingProject.id,
+    priorityImages: uniqueImages(priorityImages),
+  };
 }
 
-export { resolvePhotoAsset };
+export { getLandingProjectId, resolvePhotoAsset };

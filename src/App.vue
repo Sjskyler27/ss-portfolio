@@ -153,7 +153,7 @@
           @click="openProject(project)"
         >
           <img
-            :src="resolveImage(project.images[0])"
+            :src="resolvePreloadControlledImage(project.images[0], project)"
             :alt="project.title"
             fetchpriority="low"
             loading="lazy"
@@ -229,7 +229,7 @@
               @click="selectedImageIndex = index"
             >
               <img
-                :src="resolveImage(image)"
+                :src="resolvePreloadControlledImage(image, selectedProject)"
                 :alt="`${selectedProject.title} ${index + 1}`"
                 fetchpriority="low"
                 loading="lazy"
@@ -263,6 +263,7 @@
 <script>
 import { projects } from "./data/projects";
 import {
+  getLandingProjectId,
   preloadPortfolioImages,
   resolvePhotoAsset,
 } from "./services/imagePreloader";
@@ -286,6 +287,8 @@ export default {
       projectModalOpen: false,
       imageModalOpen: false,
       hasMountedPage: false,
+      imagePriorityLoaded: false,
+      landingProjectId: "",
       navExitDirection: "nav-fill-back",
       navFillDirection: "nav-fill-forward",
       pageTransitionName: "page-arrive",
@@ -298,7 +301,11 @@ export default {
   },
   mounted() {
     this.syncViewFromUrl();
-    preloadPortfolioImages(this.projects);
+    this.landingProjectId = getLandingProjectId(this.projects);
+    preloadPortfolioImages(this.projects).then(({ landingProjectId }) => {
+      this.landingProjectId = landingProjectId || "";
+      this.imagePriorityLoaded = true;
+    });
     notifyPortfolioView();
     window.addEventListener("popstate", this.syncViewFromUrl);
     window.addEventListener("pagehide", this.handlePortfolioExit);
@@ -427,6 +434,17 @@ export default {
     },
     resolveImage(image) {
       return resolvePhotoAsset(image);
+    },
+    resolvePreloadControlledImage(image, project) {
+      if (
+        this.imagePriorityLoaded ||
+        !this.landingProjectId ||
+        (project && project.id === this.landingProjectId)
+      ) {
+        return this.resolveImage(image);
+      }
+
+      return "";
     },
     previousImage() {
       const imageCount = this.selectedProject.images.length;
