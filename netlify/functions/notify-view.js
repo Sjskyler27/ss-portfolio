@@ -1,4 +1,5 @@
 const allowedEvents = new Set([
+  "external_site",
   "site_view",
   "section_view",
   "project_view",
@@ -69,7 +70,13 @@ function formatCompactActivity(payload, user) {
   const projectTitle = cleanValue(payload.projectTitle, 140);
   const projectId = cleanValue(payload.projectId, 100);
   const section = cleanValue(payload.section, 80);
+  const externalLabel = cleanValue(payload.externalLabel, 120);
+  const externalUrl = cleanValue(payload.externalUrl, 180);
   const path = cleanValue(payload.path, 180) || "/";
+
+  if (eventName === "external_site") {
+    return `+ ${user} external-site: ${externalLabel || externalUrl || "unknown"}`;
+  }
 
   if (eventName === "project_view") {
     return `+ ${user} viewed ${projectTitle || projectId || "project"}`;

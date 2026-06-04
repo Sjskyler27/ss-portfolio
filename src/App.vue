@@ -191,6 +191,7 @@
               :href="link.url"
               target="_blank"
               rel="noreferrer"
+              @click="notifyExternalLink(link)"
             >
               {{ link.name }}
             </a>
@@ -245,6 +246,7 @@
 <script>
 import { projects } from "./data/projects";
 import {
+  notifyExternalSite,
   notifyPortfolioSessionEnd,
   notifyPortfolioView,
   notifyProjectView,
@@ -349,6 +351,9 @@ export default {
     },
     handlePortfolioExit() {
       notifyPortfolioSessionEnd();
+    },
+    notifyExternalLink(link) {
+      notifyExternalSite(link, this.selectedProject);
     },
     withSourceQuery(path) {
       const source = new URLSearchParams(window.location.search).get("source");
