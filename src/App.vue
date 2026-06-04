@@ -191,6 +191,7 @@
               :href="link.url"
               target="_blank"
               rel="noreferrer"
+              @click="notifyExternalLink(link)"
             >
               {{ link.name }}
             </a>
@@ -244,6 +245,13 @@
 
 <script>
 import { projects } from "./data/projects";
+import {
+  notifyExternalSite,
+  notifyPortfolioSessionEnd,
+  notifyPortfolioView,
+  notifyProjectView,
+  notifySectionView,
+} from "./services/notifications";
 
 export default {
   name: "App",
@@ -264,10 +272,16 @@ export default {
   },
   mounted() {
     this.syncViewFromUrl();
+    notifyPortfolioView();
     window.addEventListener("popstate", this.syncViewFromUrl);
+    window.addEventListener("pagehide", this.handlePortfolioExit);
+    window.addEventListener("beforeunload", this.handlePortfolioExit);
   },
   beforeUnmount() {
     window.removeEventListener("popstate", this.syncViewFromUrl);
+    window.removeEventListener("pagehide", this.handlePortfolioExit);
+    window.removeEventListener("beforeunload", this.handlePortfolioExit);
+    this.handlePortfolioExit();
   },
   methods: {
     setView(view, updateUrl = true) {
@@ -277,6 +291,7 @@ export default {
       if (updateUrl) {
         const path = view === "about" ? "/" : `/${view}`;
         this.updatePath(path);
+        notifySectionView(view, path);
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -289,6 +304,7 @@ export default {
       if (updateUrl) {
         this.updatePath(`/projects/${project.id}`);
       }
+      notifyProjectView(project);
     },
     closeProjectModal(updateUrl = true) {
       this.projectModalOpen = false;
@@ -326,9 +342,28 @@ export default {
       this.setView("about", false);
     },
     updatePath(path) {
-      if (window.location.pathname !== path) {
-        window.history.pushState({}, "", path);
+      const nextPath = this.withSourceQuery(path);
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+
+      if (currentPath !== nextPath) {
+        window.history.pushState({}, "", nextPath);
       }
+    },
+    handlePortfolioExit() {
+      notifyPortfolioSessionEnd();
+    },
+    notifyExternalLink(link) {
+      notifyExternalSite(link, this.selectedProject);
+    },
+    withSourceQuery(path) {
+      const source = new URLSearchParams(window.location.search).get("source");
+
+      if (!source || path.includes("?")) {
+        return path;
+      }
+
+      const params = new URLSearchParams({ source });
+      return `${path}?${params.toString()}`;
     },
     resolveImage(image) {
       if (!image) {
