@@ -245,8 +245,10 @@
 <script>
 import { projects } from "./data/projects";
 import {
+  notifyPortfolioSessionEnd,
   notifyPortfolioView,
   notifyProjectView,
+  notifySectionView,
 } from "./services/notifications";
 
 export default {
@@ -270,9 +272,14 @@ export default {
     this.syncViewFromUrl();
     notifyPortfolioView();
     window.addEventListener("popstate", this.syncViewFromUrl);
+    window.addEventListener("pagehide", this.handlePortfolioExit);
+    window.addEventListener("beforeunload", this.handlePortfolioExit);
   },
   beforeUnmount() {
     window.removeEventListener("popstate", this.syncViewFromUrl);
+    window.removeEventListener("pagehide", this.handlePortfolioExit);
+    window.removeEventListener("beforeunload", this.handlePortfolioExit);
+    this.handlePortfolioExit();
   },
   methods: {
     setView(view, updateUrl = true) {
@@ -282,6 +289,7 @@ export default {
       if (updateUrl) {
         const path = view === "about" ? "/" : `/${view}`;
         this.updatePath(path);
+        notifySectionView(view, path);
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -338,6 +346,9 @@ export default {
       if (currentPath !== nextPath) {
         window.history.pushState({}, "", nextPath);
       }
+    },
+    handlePortfolioExit() {
+      notifyPortfolioSessionEnd();
     },
     withSourceQuery(path) {
       const source = new URLSearchParams(window.location.search).get("source");

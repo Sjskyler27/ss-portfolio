@@ -1,4 +1,9 @@
-const allowedEvents = new Set(["site_view", "project_view"]);
+const allowedEvents = new Set([
+  "site_view",
+  "section_view",
+  "project_view",
+  "session_end",
+]);
 const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -34,30 +39,80 @@ function formatSource(source) {
   return cleanSource || "unknown";
 }
 
+function formatUser(user) {
+  return cleanValue(user, 40) || "Unknown";
+}
+
+function formatSessionNumber(sessionNumber) {
+  const cleanNumber = Number(sessionNumber);
+  return Number.isFinite(cleanNumber) && cleanNumber > 0 ? cleanNumber : 1;
+}
+
+function formatDuration(totalSeconds) {
+  const cleanSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(cleanSeconds / 60);
+  const seconds = cleanSeconds % 60;
+
+  if (minutes <= 0) {
+    return `${seconds} seconds`;
+  }
+
+  if (seconds === 0) {
+    return `${minutes} minutes`;
+  }
+
+  return `${minutes} minutes ${seconds} seconds`;
+}
+
+function formatCompactActivity(payload, user) {
+  const eventName = allowedEvents.has(payload.event) ? payload.event : "site_view";
+  const projectTitle = cleanValue(payload.projectTitle, 140);
+  const projectId = cleanValue(payload.projectId, 100);
+  const section = cleanValue(payload.section, 80);
+  const path = cleanValue(payload.path, 180) || "/";
+
+  if (eventName === "project_view") {
+    return `+ ${user} viewed ${projectTitle || projectId || "project"}`;
+  }
+
+  if (eventName === "section_view") {
+    return `+ ${user} viewed ${section || path}`;
+  }
+
+  return `+ ${user} viewed ${path}`;
+}
+
 function formatDiscordMessage(payload) {
   const eventName = allowedEvents.has(payload.event) ? payload.event : "site_view";
   const source = formatSource(payload.source);
+  const user = formatUser(payload.user);
+  const sessionNumber = formatSessionNumber(payload.sessionNumber);
   const path = cleanValue(payload.path, 180) || "/";
   const referrer = cleanValue(payload.referrer, 220);
-  const projectTitle = cleanValue(payload.projectTitle, 140);
-  const projectId = cleanValue(payload.projectId, 100);
-  const timestamp = new Date().toISOString();
+  const timestamp = cleanValue(payload.sessionStartedAt, 40) || new Date().toISOString();
+
+  if (eventName === "session_end") {
+    const endedAt = cleanValue(payload.sessionEndedAt, 40) || new Date().toISOString();
+    return [
+      `+ ${user} closed portfolio ${endedAt}`,
+      `+ total time ${formatDuration(payload.totalSeconds)}`,
+    ].join("\n");
+  }
+
+  if (!payload.isSessionStart) {
+    return formatCompactActivity(payload, user);
+  }
 
   const lines =
-    eventName === "project_view"
-      ? [
-          "Project view",
-          `Source: ${source}`,
-          `Project: ${projectTitle || projectId || "unknown"}`,
-          `Page: ${path}`,
-          `Time: ${timestamp}`,
-        ]
-      : [
-          "Portfolio view",
-          `Source: ${source}`,
-          `Page: ${path}`,
-          `Time: ${timestamp}`,
-        ];
+    [
+      "--------------------",
+      "Portfolio view",
+      `Source: ${source}`,
+      `User: ${user}`,
+      `Session: ${sessionNumber}`,
+      `Page: ${path}`,
+      `Time: ${timestamp}`,
+    ];
 
   if (referrer) {
     lines.push(`Referrer: ${referrer}`);
