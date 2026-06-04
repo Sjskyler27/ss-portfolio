@@ -66,6 +66,26 @@ function formatDuration(totalSeconds) {
   return `${minutes} minutes ${seconds} seconds`;
 }
 
+function formatCompactDuration(totalSeconds) {
+  const cleanSeconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(cleanSeconds / 60);
+  const seconds = cleanSeconds % 60;
+
+  if (minutes <= 0) {
+    return `${seconds}s`;
+  }
+
+  if (seconds === 0) {
+    return `${minutes}m`;
+  }
+
+  return `${minutes}m${seconds}s`;
+}
+
+function formatCompactPrefix(payload, user) {
+  return `+ ${formatCompactDuration(payload.secondsSinceLastInteraction)} ${user}`;
+}
+
 function formatCompactActivity(payload, user) {
   const eventName = allowedEvents.has(payload.event) ? payload.event : "site_view";
   const projectTitle = cleanValue(payload.projectTitle, 140);
@@ -74,20 +94,21 @@ function formatCompactActivity(payload, user) {
   const externalLabel = cleanValue(payload.externalLabel, 120);
   const externalUrl = cleanValue(payload.externalUrl, 180);
   const path = cleanValue(payload.path, 180) || "/";
+  const prefix = formatCompactPrefix(payload, user);
 
   if (eventName === "external_site") {
-    return `+ ${user} external-site: ${externalLabel || externalUrl || "unknown"}`;
+    return `${prefix} external-site: ${externalLabel || externalUrl || "unknown"}`;
   }
 
   if (eventName === "project_view") {
-    return `+ ${user} viewed ${projectTitle || projectId || "project"}`;
+    return `${prefix} viewed ${projectTitle || projectId || "project"}`;
   }
 
   if (eventName === "section_view") {
-    return `+ ${user} viewed ${section || path}`;
+    return `${prefix} viewed ${section || path}`;
   }
 
-  return `+ ${user} viewed ${path}`;
+  return `${prefix} viewed ${path}`;
 }
 
 function formatDiscordMessage(payload) {
@@ -102,7 +123,7 @@ function formatDiscordMessage(payload) {
   if (eventName === "session_end") {
     const endedAt = cleanValue(payload.sessionEndedAt, 40) || new Date().toISOString();
     return [
-      `+ ${user} closed portfolio ${endedAt}`,
+      `${formatCompactPrefix(payload, user)} closed portfolio ${endedAt}`,
       `+ total time ${formatDuration(payload.totalSeconds)}`,
     ].join("\n");
   }
