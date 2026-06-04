@@ -50,7 +50,7 @@
     </div>
   </div>
 
-  <img src="./assets/photos/skylersimpson.png" alt="Skyler Simpson" />
+  <img src="./assets/photos/skylersimpson.png" alt="Skyler Simpson" fetchpriority="high" />
 </section>
 
     <section v-else-if="currentView === 'experience'" key="experience" class="page experience-page">
@@ -152,7 +152,12 @@
           class="project-card"
           @click="openProject(project)"
         >
-          <img :src="resolveImage(project.images[0])" :alt="project.title" />
+          <img
+            :src="resolveImage(project.images[0])"
+            :alt="project.title"
+            fetchpriority="low"
+            loading="lazy"
+          />
           <div class="project-card-body">
             <span class="project-type">{{ project.type }}</span>
             <h2>{{ project.title }}</h2>
@@ -210,6 +215,7 @@
               <img
                 :src="resolveImage(selectedProject.images[selectedImageIndex])"
                 :alt="selectedProject.title"
+                fetchpriority="high"
               />
               <span aria-hidden="true" class="magnify-icon">&#128269;</span>
             </div>
@@ -225,6 +231,8 @@
               <img
                 :src="resolveImage(image)"
                 :alt="`${selectedProject.title} ${index + 1}`"
+                fetchpriority="low"
+                loading="lazy"
               />
             </button>
           </div>
@@ -245,6 +253,7 @@
       <img
         :src="resolveImage(selectedProject.images[selectedImageIndex])"
         :alt="selectedProject.title"
+        fetchpriority="high"
       />
     </div>
     </Transition>
@@ -253,6 +262,10 @@
 
 <script>
 import { projects } from "./data/projects";
+import {
+  preloadPortfolioImages,
+  resolvePhotoAsset,
+} from "./services/imagePreloader";
 import {
   notifyExternalSite,
   notifyPortfolioSessionEnd,
@@ -285,6 +298,7 @@ export default {
   },
   mounted() {
     this.syncViewFromUrl();
+    preloadPortfolioImages(this.projects);
     notifyPortfolioView();
     window.addEventListener("popstate", this.syncViewFromUrl);
     window.addEventListener("pagehide", this.handlePortfolioExit);
@@ -412,17 +426,7 @@ export default {
       return `${path}?${params.toString()}`;
     },
     resolveImage(image) {
-      if (!image) {
-        return "";
-      }
-      if (image.startsWith("http")) {
-        return image;
-      }
-      try {
-        return require(`@/assets/photos/${image}`);
-      } catch (error) {
-        return image;
-      }
+      return resolvePhotoAsset(image);
     },
     previousImage() {
       const imageCount = this.selectedProject.images.length;
