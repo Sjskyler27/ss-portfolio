@@ -9,16 +9,18 @@
         <button
           v-for="item in navItems"
           :key="item.id"
-          :class="{ active: currentView === item.id }"
+          :class="getNavButtonClass(item.id)"
           @click="setView(item.id)"
         >
-          {{ item.label }}
+          <span>{{ item.label }}</span>
         </button>
       </nav>
       <a href="Resume6-1.pdf" target="_blank" class="resume-link"> Resume </a>
     </header>
 
-    <section v-if="currentView === 'about'" class="page about-page">
+    <div class="page-stage">
+      <Transition :name="pageTransitionName" appear>
+    <section v-if="currentView === 'about'" key="about" class="page about-page">
   <div class="about-copy">
     <h2>
       Full-stack developer focused on product workflows, AI-assisted development,
@@ -48,97 +50,27 @@
     </div>
   </div>
 
-  <img src="./assets/photos/skylersimpson.png" alt="Skyler Simpson" />
+  <img src="./assets/photos/skylersimpson.png" alt="Skyler Simpson" fetchpriority="high" />
 </section>
 
-    <section v-if="currentView === 'experience'" class="page experience-page">
+    <section v-else-if="currentView === 'experience'" key="experience" class="page experience-page">
       <div class="page-heading">
         <h1 class="eyebrow">Experience</h1>
       </div>
 
       <div class="experience-grid">
-  <article>
-    <span>OnDiem</span>
-    <h2>Full-stack product engineer</h2>
-    <p>
-      Built and maintained production web and mobile features across onboarding,
-      credentialing, shift workflows, admin tools, API integrations, and shared UI
-      systems using Vue, Flutter, and standardized client architecture.
-    </p>
-    <div class="tag-list">
-      <span>Vue</span>
-      <span>Flutter</span>
-      <span>API clients</span>
-      <span>Product workflows</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Fox Run Suites</span>
-    <h2>AI workflow and automation consultant</h2>
-    <p>
-      Set up a Docker-based Codex development environment, structured AI-assisted
-      coding workflows, and documented repeatable processes for safely editing,
-      testing, and managing project code.
-    </p>
-    <div class="tag-list">
-      <span>Docker</span>
-      <span>Codex</span>
-      <span>Dev workflows</span>
-      <span>Automation</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Stonecrest Rentals</span>
-    <h2>Full-stack contractor</h2>
-    <p>
-      Helped plan and build a rental platform from client requirements and Figma
-      designs through database modeling, Node backend scaffolding, React frontend
-      development, API documentation, hosting, and admin tooling.
-    </p>
-    <div class="tag-list">
-      <span>React</span>
-      <span>Node</span>
-      <span>Sequelize</span>
-      <span>Swagger</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Personal projects</span>
-    <h2>Games, tools, and automation</h2>
-    <p>
-      Built browser games, Electron experiments, Home Assistant automations,
-      WebSocket prototypes, Python simulations, spreadsheet tooling, and deployable
-      demos focused on practical systems and interactive experiences.
-    </p>
-    <div class="tag-list">
-      <span>Electron</span>
-      <span>Python</span>
-      <span>WebSockets</span>
-      <span>Game logic</span>
-    </div>
-  </article>
-
-  <article>
-    <span>Education</span>
-    <h2>Software Engineering</h2>
-    <p>
-      Earned a BS in Software Engineering from BYU-Idaho with a Web Development
-      certificate, completing full-stack coursework, database projects, team builds,
-      and hackathon-style development work.
-    </p>
-    <div class="tag-list">
-      <span>Web development</span>
-      <span>Databases</span>
-      <span>Full-stack projects</span>
-    </div>
-  </article>
-</div>
+        <article v-for="item in experienceItems" :key="item.organization">
+          <span>{{ item.organization }}</span>
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.description }}</p>
+          <div class="tag-list">
+            <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
+          </div>
+        </article>
+      </div>
     </section>
 
-    <section v-if="currentView === 'projects'" class="page projects-page">
+    <section v-else-if="currentView === 'projects'" key="projects" class="page projects-page">
       <div class="page-heading compact-heading">
         <h1 class="eyebrow">Projects</h1>
       </div>
@@ -150,7 +82,12 @@
           class="project-card"
           @click="openProject(project)"
         >
-          <img :src="resolveImage(project.images[0])" :alt="project.title" />
+          <img
+            :src="resolvePreloadControlledImage(project.images[0], project)"
+            :alt="project.title"
+            fetchpriority="low"
+            loading="lazy"
+          />
           <div class="project-card-body">
             <span class="project-type">{{ project.type }}</span>
             <h2>{{ project.title }}</h2>
@@ -162,7 +99,10 @@
         </button>
       </div>
     </section>
+      </Transition>
+    </div>
 
+    <Transition name="modal-slide" appear>
     <div
       class="project-modal-backdrop"
       v-if="projectModalOpen"
@@ -205,6 +145,7 @@
               <img
                 :src="resolveImage(selectedProject.images[selectedImageIndex])"
                 :alt="selectedProject.title"
+                fetchpriority="high"
               />
               <span aria-hidden="true" class="magnify-icon">&#128269;</span>
             </div>
@@ -218,15 +159,19 @@
               @click="selectedImageIndex = index"
             >
               <img
-                :src="resolveImage(image)"
+                :src="resolvePreloadControlledImage(image, selectedProject)"
                 :alt="`${selectedProject.title} ${index + 1}`"
+                fetchpriority="low"
+                loading="lazy"
               />
             </button>
           </div>
         </div>
       </article>
     </div>
+    </Transition>
 
+    <Transition name="modal-slide" appear>
     <div class="image-modal" v-if="imageModalOpen" @click.self="imageModalOpen = false">
       <button
         class="modal-close"
@@ -238,13 +183,21 @@
       <img
         :src="resolveImage(selectedProject.images[selectedImageIndex])"
         :alt="selectedProject.title"
+        fetchpriority="high"
       />
     </div>
+    </Transition>
   </main>
 </template>
 
 <script>
+import { experienceItems } from "./data/experience";
 import { projects } from "./data/projects";
+import {
+  getLandingProjectId,
+  preloadPortfolioImages,
+  resolvePhotoAsset,
+} from "./services/imagePreloader";
 import {
   notifyExternalSite,
   notifyPortfolioSessionEnd,
@@ -257,12 +210,20 @@ export default {
   name: "App",
   data() {
     return {
+      experienceItems,
       projects,
       currentView: "about",
+      previousView: "",
       selectedProject: projects[0],
       selectedImageIndex: 0,
       projectModalOpen: false,
       imageModalOpen: false,
+      hasMountedPage: false,
+      imagePriorityLoaded: false,
+      landingProjectId: "",
+      navExitDirection: "nav-fill-back",
+      navFillDirection: "nav-fill-forward",
+      pageTransitionName: "page-arrive",
       navItems: [
         { id: "about", label: "About" },
         { id: "experience", label: "Experience" },
@@ -272,6 +233,11 @@ export default {
   },
   mounted() {
     this.syncViewFromUrl();
+    this.landingProjectId = getLandingProjectId(this.projects);
+    preloadPortfolioImages(this.projects).then(({ landingProjectId }) => {
+      this.landingProjectId = landingProjectId || "";
+      this.imagePriorityLoaded = true;
+    });
     notifyPortfolioView();
     window.addEventListener("popstate", this.syncViewFromUrl);
     window.addEventListener("pagehide", this.handlePortfolioExit);
@@ -285,7 +251,7 @@ export default {
   },
   methods: {
     setView(view, updateUrl = true) {
-      this.currentView = view;
+      this.setCurrentView(view);
       this.projectModalOpen = false;
       this.imageModalOpen = false;
       if (updateUrl) {
@@ -297,7 +263,7 @@ export default {
     },
     openProject(project, updateUrl = true) {
       this.selectedProject = project;
-      this.currentView = "projects";
+      this.setCurrentView("projects");
       this.selectedImageIndex = 0;
       this.projectModalOpen = true;
       this.imageModalOpen = false;
@@ -318,7 +284,7 @@ export default {
       const [section, projectId] = pathParts;
 
       if (section === "projects") {
-        this.currentView = "projects";
+        this.setCurrentView("projects");
 
         if (projectId) {
           const decodedProjectId = decodeURIComponent(projectId);
@@ -340,6 +306,39 @@ export default {
       }
 
       this.setView("about", false);
+    },
+    setCurrentView(view) {
+      const isInitialPage = !this.hasMountedPage;
+
+      if (view === this.currentView) {
+        this.hasMountedPage = true;
+        return;
+      }
+
+      const currentIndex = this.navItems.findIndex(({ id }) => id === this.currentView);
+      const nextIndex = this.navItems.findIndex(({ id }) => id === view);
+
+      this.pageTransitionName =
+        isInitialPage || currentIndex < 0
+          ? "page-arrive"
+          : nextIndex >= currentIndex
+          ? "page-swipe-forward"
+          : "page-swipe-back";
+      this.navFillDirection =
+        isInitialPage || nextIndex >= currentIndex ? "nav-fill-forward" : "nav-fill-back";
+      this.navExitDirection =
+        this.navFillDirection === "nav-fill-forward" ? "nav-fill-back" : "nav-fill-forward";
+      this.previousView = this.currentView;
+      this.currentView = view;
+      this.hasMountedPage = true;
+    },
+    getNavButtonClass(view) {
+      return {
+        active: this.currentView === view,
+        exiting: this.previousView === view && this.currentView !== view,
+        [this.navFillDirection]: this.currentView === view,
+        [this.navExitDirection]: this.previousView === view && this.currentView !== view,
+      };
     },
     updatePath(path) {
       const nextPath = this.withSourceQuery(path);
@@ -366,17 +365,18 @@ export default {
       return `${path}?${params.toString()}`;
     },
     resolveImage(image) {
-      if (!image) {
-        return "";
+      return resolvePhotoAsset(image);
+    },
+    resolvePreloadControlledImage(image, project) {
+      if (
+        this.imagePriorityLoaded ||
+        !this.landingProjectId ||
+        (project && project.id === this.landingProjectId)
+      ) {
+        return this.resolveImage(image);
       }
-      if (image.startsWith("http")) {
-        return image;
-      }
-      try {
-        return require(`@/assets/photos/${image}`);
-      } catch (error) {
-        return image;
-      }
+
+      return "";
     },
     previousImage() {
       const imageCount = this.selectedProject.images.length;
@@ -475,17 +475,70 @@ nav button,
 
 nav button,
 .about-actions button {
+  position: relative;
+  overflow: hidden;
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
 }
 
-nav button.active,
-nav button:hover,
+nav button {
+  isolation: isolate;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+nav button span {
+  position: relative;
+  z-index: 1;
+}
+
+nav button::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: #193a5a;
+  content: "";
+  transform: scaleX(0);
+  transition: transform 260ms ease;
+}
+
+nav button.active {
+  border-color: transparent;
+  background: transparent;
+  color: #ffffff;
+}
+
 .about-actions button:first-child {
   border-color: #193a5a;
   background: #193a5a;
   color: #ffffff;
+}
+
+nav button.nav-fill-forward::before {
+  transform-origin: left center;
+}
+
+nav button.nav-fill-back::before {
+  transform-origin: right center;
+}
+
+nav button.active::before {
+  transform: scaleX(1);
+}
+
+nav button:not(.active):hover {
+  border-color: #193a5a;
+  background: transparent;
+  color: #193a5a;
+}
+
+nav button:focus-visible {
+  outline: 2px solid #f18f55;
+  outline-offset: 2px;
 }
 
 .resume-link,
@@ -502,6 +555,82 @@ nav button:hover,
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 36px 0;
+}
+
+.page-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.page-arrive-enter-active {
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease,
+    visibility 420ms ease;
+  will-change: opacity, transform;
+}
+
+.page-arrive-enter-from {
+  opacity: 0;
+  transform: translateY(34px);
+  visibility: hidden;
+}
+
+.page-arrive-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.page-swipe-forward-enter-active,
+.page-swipe-forward-leave-active,
+.page-swipe-back-enter-active,
+.page-swipe-back-leave-active {
+  transition:
+    opacity 380ms ease,
+    transform 380ms ease,
+    visibility 380ms ease;
+  will-change: opacity, transform;
+}
+
+.page-swipe-forward-leave-active,
+.page-swipe-back-leave-active {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-swipe-forward-enter-from,
+.page-swipe-back-enter-from,
+.page-swipe-forward-leave-to,
+.page-swipe-back-leave-to {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.page-swipe-forward-enter-from {
+  transform: translateX(100%);
+}
+
+.page-swipe-forward-leave-to {
+  transform: translateX(-100%);
+}
+
+.page-swipe-back-enter-from {
+  transform: translateX(-100%);
+}
+
+.page-swipe-back-leave-to {
+  transform: translateX(100%);
+}
+
+.page-swipe-forward-enter-to,
+.page-swipe-forward-leave-from,
+.page-swipe-back-enter-to,
+.page-swipe-back-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+  visibility: visible;
 }
 
 .eyebrow {
@@ -837,6 +966,62 @@ p {
 
 .image-modal .modal-close {
   position: fixed;
+}
+
+.modal-slide-enter-active,
+.modal-slide-leave-active {
+  transition:
+    opacity 260ms ease,
+    visibility 260ms ease;
+}
+
+.modal-slide-enter-from,
+.modal-slide-leave-to {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.modal-slide-enter-to,
+.modal-slide-leave-from {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-slide-enter-active .project-modal,
+.modal-slide-leave-active .project-modal,
+.modal-slide-enter-active > img,
+.modal-slide-leave-active > img {
+  transition: transform 260ms ease;
+}
+
+.modal-slide-enter-from .project-modal,
+.modal-slide-leave-to .project-modal,
+.modal-slide-enter-from > img,
+.modal-slide-leave-to > img {
+  transform: translateY(44px);
+}
+
+.modal-slide-enter-to .project-modal,
+.modal-slide-leave-from .project-modal,
+.modal-slide-enter-to > img,
+.modal-slide-leave-from > img {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-arrive-enter-active,
+  .page-swipe-forward-enter-active,
+  .page-swipe-forward-leave-active,
+  .page-swipe-back-enter-active,
+  .page-swipe-back-leave-active,
+  .modal-slide-enter-active,
+  .modal-slide-leave-active,
+  .modal-slide-enter-active .project-modal,
+  .modal-slide-leave-active .project-modal,
+  .modal-slide-enter-active > img,
+  .modal-slide-leave-active > img {
+    transition-duration: 1ms;
+  }
 }
 
 ::-webkit-scrollbar {
