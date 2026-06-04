@@ -18,7 +18,9 @@
       <a href="Resume6-1.pdf" target="_blank" class="resume-link"> Resume </a>
     </header>
 
-    <section v-if="currentView === 'about'" class="page about-page">
+    <div class="page-stage">
+      <Transition :name="pageTransitionName" appear>
+    <section v-if="currentView === 'about'" key="about" class="page about-page">
   <div class="about-copy">
     <h2>
       Full-stack developer focused on product workflows, AI-assisted development,
@@ -51,7 +53,7 @@
   <img src="./assets/photos/skylersimpson.png" alt="Skyler Simpson" />
 </section>
 
-    <section v-if="currentView === 'experience'" class="page experience-page">
+    <section v-else-if="currentView === 'experience'" key="experience" class="page experience-page">
       <div class="page-heading">
         <h1 class="eyebrow">Experience</h1>
       </div>
@@ -138,7 +140,7 @@
 </div>
     </section>
 
-    <section v-if="currentView === 'projects'" class="page projects-page">
+    <section v-else-if="currentView === 'projects'" key="projects" class="page projects-page">
       <div class="page-heading compact-heading">
         <h1 class="eyebrow">Projects</h1>
       </div>
@@ -162,7 +164,10 @@
         </button>
       </div>
     </section>
+      </Transition>
+    </div>
 
+    <Transition name="modal-slide" appear>
     <div
       class="project-modal-backdrop"
       v-if="projectModalOpen"
@@ -226,7 +231,9 @@
         </div>
       </article>
     </div>
+    </Transition>
 
+    <Transition name="modal-slide" appear>
     <div class="image-modal" v-if="imageModalOpen" @click.self="imageModalOpen = false">
       <button
         class="modal-close"
@@ -240,6 +247,7 @@
         :alt="selectedProject.title"
       />
     </div>
+    </Transition>
   </main>
 </template>
 
@@ -263,6 +271,7 @@ export default {
       selectedImageIndex: 0,
       projectModalOpen: false,
       imageModalOpen: false,
+      pageTransitionName: "page-swipe-forward",
       navItems: [
         { id: "about", label: "About" },
         { id: "experience", label: "Experience" },
@@ -285,7 +294,7 @@ export default {
   },
   methods: {
     setView(view, updateUrl = true) {
-      this.currentView = view;
+      this.setCurrentView(view);
       this.projectModalOpen = false;
       this.imageModalOpen = false;
       if (updateUrl) {
@@ -297,7 +306,7 @@ export default {
     },
     openProject(project, updateUrl = true) {
       this.selectedProject = project;
-      this.currentView = "projects";
+      this.setCurrentView("projects");
       this.selectedImageIndex = 0;
       this.projectModalOpen = true;
       this.imageModalOpen = false;
@@ -318,7 +327,7 @@ export default {
       const [section, projectId] = pathParts;
 
       if (section === "projects") {
-        this.currentView = "projects";
+        this.setCurrentView("projects");
 
         if (projectId) {
           const decodedProjectId = decodeURIComponent(projectId);
@@ -340,6 +349,18 @@ export default {
       }
 
       this.setView("about", false);
+    },
+    setCurrentView(view) {
+      if (view === this.currentView) {
+        return;
+      }
+
+      const currentIndex = this.navItems.findIndex(({ id }) => id === this.currentView);
+      const nextIndex = this.navItems.findIndex(({ id }) => id === view);
+
+      this.pageTransitionName =
+        nextIndex >= currentIndex ? "page-swipe-forward" : "page-swipe-back";
+      this.currentView = view;
     },
     updatePath(path) {
       const nextPath = this.withSourceQuery(path);
@@ -502,6 +523,62 @@ nav button:hover,
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 36px 0;
+}
+
+.page-stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.page-swipe-forward-enter-active,
+.page-swipe-forward-leave-active,
+.page-swipe-back-enter-active,
+.page-swipe-back-leave-active {
+  transition:
+    opacity 380ms ease,
+    transform 380ms ease,
+    visibility 380ms ease;
+  will-change: opacity, transform;
+}
+
+.page-swipe-forward-leave-active,
+.page-swipe-back-leave-active {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.page-swipe-forward-enter-from,
+.page-swipe-back-enter-from,
+.page-swipe-forward-leave-to,
+.page-swipe-back-leave-to {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.page-swipe-forward-enter-from {
+  transform: translateX(100%);
+}
+
+.page-swipe-forward-leave-to {
+  transform: translateX(-100%);
+}
+
+.page-swipe-back-enter-from {
+  transform: translateX(-100%);
+}
+
+.page-swipe-back-leave-to {
+  transform: translateX(100%);
+}
+
+.page-swipe-forward-enter-to,
+.page-swipe-forward-leave-from,
+.page-swipe-back-enter-to,
+.page-swipe-back-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+  visibility: visible;
 }
 
 .eyebrow {
@@ -837,6 +914,61 @@ p {
 
 .image-modal .modal-close {
   position: fixed;
+}
+
+.modal-slide-enter-active,
+.modal-slide-leave-active {
+  transition:
+    opacity 260ms ease,
+    visibility 260ms ease;
+}
+
+.modal-slide-enter-from,
+.modal-slide-leave-to {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.modal-slide-enter-to,
+.modal-slide-leave-from {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-slide-enter-active .project-modal,
+.modal-slide-leave-active .project-modal,
+.modal-slide-enter-active > img,
+.modal-slide-leave-active > img {
+  transition: transform 260ms ease;
+}
+
+.modal-slide-enter-from .project-modal,
+.modal-slide-leave-to .project-modal,
+.modal-slide-enter-from > img,
+.modal-slide-leave-to > img {
+  transform: translateY(44px);
+}
+
+.modal-slide-enter-to .project-modal,
+.modal-slide-leave-from .project-modal,
+.modal-slide-enter-to > img,
+.modal-slide-leave-from > img {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-swipe-forward-enter-active,
+  .page-swipe-forward-leave-active,
+  .page-swipe-back-enter-active,
+  .page-swipe-back-leave-active,
+  .modal-slide-enter-active,
+  .modal-slide-leave-active,
+  .modal-slide-enter-active .project-modal,
+  .modal-slide-leave-active .project-modal,
+  .modal-slide-enter-active > img,
+  .modal-slide-leave-active > img {
+    transition-duration: 1ms;
+  }
 }
 
 ::-webkit-scrollbar {
