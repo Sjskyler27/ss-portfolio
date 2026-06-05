@@ -31,6 +31,47 @@ export const projects = [
 
 { id: 'healthcare_app', title: 'Healthcare Data Platform', type: 'Personal Project', category: 'featured', group: 'fullstack', summary: 'A full-stack healthcare platform built with Django, PostgreSQL, and React focused on patient, encounter, and condition data management.', impact: 'Designed the relational database architecture, imported large synthetic healthcare datasets through ETL pipelines, built admin tooling, and designed Metabase SQL dashboards for healthcare analytics and reporting', description: 'This project was created to deepen my experience with backend engineering, healthcare data systems, and full-stack architecture. The platform uses Django and PostgreSQL to model healthcare relationships between patients, encounters, and medical conditions while supporting authenticated admin workflows and scalable data management practices. I built ETL scripts to process and import synthetic Synthea healthcare datasets into a normalized PostgreSQL schema, allowing realistic testing against large relational datasets. The project also includes Django admin tooling, role-based access controls, REST-ready backend architecture, and a React frontend environment prepared for future patient and analytics interfaces. Along the way I gained hands-on experience with database migrations, ORM relationships, ETL concepts, PostgreSQL administration, Docker-based tooling, and healthcare-oriented backend design. I also integrated Metabase for exploratory healthcare analytics and dashboarding, using SQL-driven visualizations on top of the PostgreSQL schema to better understand reporting workflows, aggregations, and healthcare operational metrics.', images: [ 'healthcare_app/1.png', 'healthcare_app/2.png', 'healthcare_app/3.png', 'healthcare_app/5.png','healthcare_app/4.png',], tech: [ 'Django', 'Python', 'PostgreSQL', 'React', 'Docker', 'REST APIs', 'ETL', 'pgAdmin','Synthea', 'MetaBase' ], links: [ { name: 'GitLab Repo', url: 'https://gitlab.com/Sjskyler27/healthcare_app' },{name:'Demo', url: 'https://healthcaretestapp.netlify.app/'}, {name:'Admin', url: 'https://healthcare-app-khaki-seven.vercel.app/admin/' } ], },
 {
+  id: 'home_assistant_automation',
+  title: 'Home Assistant Automation Hub',
+  type: 'Personal Project',
+  category: 'featured',
+  group: 'fullstack',
+  summary: 'A self-hosted smart home automation system built with Home Assistant, Docker, webhooks, NFC tags, and media integrations for family-focused household workflows.',
+  impact: 'Built a Docker-based Home Assistant environment with custom webhook automations, NFC-triggered actions, Discord notifications, Steam auto-launching, Plex media playback, photo book workflows, and child-friendly physical media controls using QR/NFC tags.',
+  description:
+    'This project was created to explore self-hosted automation, local networking, media control, and practical smart home workflows. I built and configured a Home Assistant environment running in Docker and connected it to household devices, media services, webhooks, and custom scripts. A major focus of the project was creating physical interaction points for my daughter, including NFC tags and QR-style “modern DVD” cards that can trigger family-friendly media, playlists, Plex movies, YouTube videos, or other home actions without needing to navigate apps manually. I also built webhook-based automations for Discord notifications, phone actions, Steam game launching, and media playback across devices. The project included learning Docker container management, Home Assistant YAML configuration, webhook routing, local network troubleshooting, SSH-based Windows automation, Tasker mobile integrations, Plex/Jellyfin-style media workflows, NFC limitations, and smart home debugging. Along the way I gained hands-on experience connecting cloud services, local devices, scripts, and self-hosted infrastructure into one practical automation hub for entertainment, family routines, and household control.',
+  images: [
+    'home_assistant_automation/1.png',
+    'home_assistant_automation/2.png',
+  ],
+  tech: [
+    'Home Assistant',
+    'Docker',
+    'YAML',
+    'Claude',
+    'Webhooks',
+    'NFC Tags',
+    'QR Codes',
+    'Tasker',
+    'Discord Webhooks',
+    'SSH',
+    'PowerShell',
+    'Windows Automation',
+    'Local Networking',
+    'Media Automation',
+  ],
+  links: [
+    {
+      name: 'GitLab Repo',
+      url: '',
+    },
+    {
+      name: 'Demo',
+      url: '',
+    },
+  ],
+},
+{
     id: 'component-library',
     title: 'Component Library',
     type: 'Professional',
