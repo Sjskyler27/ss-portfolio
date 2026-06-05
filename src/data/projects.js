@@ -1,34 +1,4 @@
 export const projects = [
-  {
-  id: 'app-rebuild',
-  title: 'onDiem App Rebuild',
-  type: 'Professional',
-  category: 'featured',
-  group: 'professional',
-
-  summary:
-    'A full rebuild of the onDiem mobile application using Flutter, Rust services, and AI-assisted development workflows.',
-
-  impact:
-    'Helped deliver a modernized mobile experience with faster iteration, improved onboarding, ranking-based shift matching, and migration support for existing users.',
-
-  description:
-    'Contributed to a rapid rebuild of the onDiem mobile application using Flutter for the client experience and Rust-backed services for newer platform functionality. The project focused on improving usability, modernizing the application architecture, and streamlining the onboarding and shift discovery experience. New features included ranking-based shift matching, guest browsing before login, and smoother migration support for existing users moving to the new platform. Development emphasized fast iteration and structured AI-assisted workflows using Claude and Ralph looping processes to accelerate implementation, planning, and refinement across the team.',
-
-  images: ['app-rebuild/1.png', 'app-rebuild/2.png', 'app-rebuild/3.png', 'app-rebuild/4.png'],
-
-  tech: [
-    'Flutter',
-    'Rust',
-    'Dart',
-    'AI-assisted development',
-    'Claude',
-    'Ralph Loops',
-  ],
-
-  links: [],
-},
-
 { id: 'healthcare_app', title: 'Healthcare Data Platform', type: 'Personal Project', category: 'featured', group: 'fullstack', summary: 'A full-stack healthcare platform built with Django, PostgreSQL, and React focused on patient, encounter, and condition data management.', impact: 'Designed the relational database architecture, imported large synthetic healthcare datasets through ETL pipelines, built admin tooling, and designed Metabase SQL dashboards for healthcare analytics and reporting', description: 'This project was created to deepen my experience with backend engineering, healthcare data systems, and full-stack architecture. The platform uses Django and PostgreSQL to model healthcare relationships between patients, encounters, and medical conditions while supporting authenticated admin workflows and scalable data management practices. I built ETL scripts to process and import synthetic Synthea healthcare datasets into a normalized PostgreSQL schema, allowing realistic testing against large relational datasets. The project also includes Django admin tooling, role-based access controls, REST-ready backend architecture, and a React frontend environment prepared for future patient and analytics interfaces. Along the way I gained hands-on experience with database migrations, ORM relationships, ETL concepts, PostgreSQL administration, Docker-based tooling, and healthcare-oriented backend design. I also integrated Metabase for exploratory healthcare analytics and dashboarding, using SQL-driven visualizations on top of the PostgreSQL schema to better understand reporting workflows, aggregations, and healthcare operational metrics.', images: [ 'healthcare_app/1.png', 'healthcare_app/2.png', 'healthcare_app/3.png', 'healthcare_app/5.png','healthcare_app/4.png',], tech: [ 'Django', 'Python', 'PostgreSQL', 'React', 'Docker', 'REST APIs', 'ETL', 'pgAdmin','Synthea', 'MetaBase' ], links: [ { name: 'GitLab Repo', url: 'https://gitlab.com/Sjskyler27/healthcare_app' },{name:'Demo', url: 'https://healthcaretestapp.netlify.app/'}, {name:'Admin', url: 'https://healthcare-app-khaki-seven.vercel.app/admin/' } ], },
 {
   id: 'home_assistant_automation',
@@ -61,62 +31,36 @@ export const projects = [
     'Media Automation',
   ],
   links: [
-    {
-      name: 'GitLab Repo',
-      url: '',
-    },
-    {
-      name: 'Demo',
-      url: '',
-    },
   ],
 },
-{
-    id: 'component-library',
-    title: 'Component Library',
-    type: 'Professional',
+    {
+    id: 'heat',
+    title: 'Bot Predictions for HEAT',
+    type: 'Personal Tool',
     category: 'featured',
-    group: 'professional',
+    group: 'personal',
     summary:
-      'A shared OnDiem component catalog that helped design and development teams build consistently.',
+      'A Python simulation tool that estimated board game map time and difficulty from bot racing data.',
     impact:
-      'Created a single source for reusable UI patterns so teams could inspect components in action and maintain a more cohesive product experience.',
+      'Ran hundreds of race simulations per map and produced predictions that landed within a few minutes of real play sessions.',
     description:
-      'I developed a comprehensive component library for OnDiem, designed to standardize and streamline the components used across our website. This library serves as a single, unified resource for our design and development teams, ensuring consistency and efficiency in our workflow. It provides an extensive catalog of all components in action, offering designers an easy and intuitive way to explore, understand, and implement these elements in their projects.',
+      'This was a fun use of both Python and Excel. I created a Python script that modeled the bot mechanics for the board game HEAT. The bot had functions for reading map values, drawing cards, moving, and handling corners. The race function loaded track data from an Excel spreadsheet with distance from corners, distance from start, corner speed, and other values. I ran hundreds of simulations for every track and logged the data. Time was estimated from average bot turns multiplied by average player turn time. Difficulty was based on patterns in corner rate, since maps where bots passed corners more quickly tended to be harder for players. I posted my findings on the forum and the times were accurate to within two or three minutes of my predictions.',
     images: [
-      'component_library/image_1.png',
-      'component_library/image_2.png',
-      'component_library/image_3.png',
+      'https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__imagepage/img/k4uPIqjYuWBzofFiCyjSWN6KJow=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6940449.png',
+      'https://cf.geekdo-images.com/GpyIgLpb_eSOsC9Y05nmyw__imagepage/img/enHJ780fj7F8GZsNLtzUylEdhVQ=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427299.png',
+      'https://cf.geekdo-images.com/S1KkjFX5vodPEcF94wGtHQ__imagepage/img/VWH3CKPqRsoHDQ1v76A5VGMMI_o=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427298.png',
     ],
-    tech: ['Vue', 'SCSS', 'GitHub Pages', 'Design Systems'],
+    tech: ['Python', 'OpenPyXL', 'Excel', 'Simulation', 'Data Analysis'],
     links: [
       {
-        name: 'Component Library',
-        url: 'https://ondiem.github.io/library/',
+        name: 'Github Repo',
+        url: 'https://github.com/Sjskyler27/HEATMAPTEST',
+      },
+      {
+        name: 'Forum Post',
+        url: 'https://boardgamegeek.com/thread/3055787/article/42258347#42258347',
       },
     ],
-  },
-  {
-    id: 'onboarding',
-    title: 'Onboarding Flow',
-    type: 'Professional',
-    category: 'featured',
-    group: 'professional',
-    summary:
-      'A resumable onboarding workflow that combined several credentialing steps into one guided flow.',
-    impact:
-      'Reduced application friction by allowing users to apply before final license approval while keeping practices protected from unapproved applicants.',
-    description:
-      'I enhanced the onboarding flow for our users by utilizing the overlay module from the library to streamline the initial onboarding process. This project combined Basic Information, EEOC, Employee Handbook, Credentials, and Additional Verifications into a single flow. I implemented functionality that allows users to save their progress and resume the onboarding journey at any point, with notifications on the main dashboard that return the user to their spot. Previously a user had to have their state license approved before they could start applying for jobs. Now users can apply for jobs before being approved, substantially improving application time. Practices will only see applications from users that have been approved, and if a user is not approved they receive an email notification when credentials are declined.',
-    images: [
-      'onboarding/1.png',
-      'onboarding/2.png',
-      'onboarding/3.png',
-      'onboarding/4.png',
-      'onboarding/5.png',
-    ],
-    tech: ['Vue', 'Forms', 'Dashboard UX', 'Credentialing'],
-    links: [],
   },
     {
     id: 'wordis',
@@ -191,6 +135,60 @@ export const projects = [
     },
   ],
 },
+   {
+  id: 'app-rebuild',
+  title: 'onDiem App Rebuild',
+  type: 'Professional',
+  category: 'featured',
+  group: 'professional',
+
+  summary:
+    'A full rebuild of the onDiem mobile application using Flutter, Rust services, and AI-assisted development workflows.',
+
+  impact:
+    'Helped deliver a modernized mobile experience with faster iteration, improved onboarding, ranking-based shift matching, and migration support for existing users.',
+
+  description:
+    'Contributed to a rapid rebuild of the onDiem mobile application using Flutter for the client experience and Rust-backed services for newer platform functionality. The project focused on improving usability, modernizing the application architecture, and streamlining the onboarding and shift discovery experience. New features included ranking-based shift matching, guest browsing before login, and smoother migration support for existing users moving to the new platform. Development emphasized fast iteration and structured AI-assisted workflows using Claude and Ralph looping processes to accelerate implementation, planning, and refinement across the team.',
+
+  images: ['app-rebuild/1.png', 'app-rebuild/2.png', 'app-rebuild/3.png', 'app-rebuild/4.png'],
+
+  tech: [
+    'Flutter',
+    'Rust',
+    'Dart',
+    'AI-assisted development',
+    'Claude',
+    'Ralph Loops',
+  ],
+
+  links: [],
+},
+{
+    id: 'component-library',
+    title: 'Component Library',
+    type: 'Professional',
+    category: 'featured',
+    group: 'professional',
+    summary:
+      'A shared OnDiem component catalog that helped design and development teams build consistently.',
+    impact:
+      'Created a single source for reusable UI patterns so teams could inspect components in action and maintain a more cohesive product experience.',
+    description:
+      'I developed a comprehensive component library for OnDiem, designed to standardize and streamline the components used across our website. This library serves as a single, unified resource for our design and development teams, ensuring consistency and efficiency in our workflow. It provides an extensive catalog of all components in action, offering designers an easy and intuitive way to explore, understand, and implement these elements in their projects.',
+    images: [
+      'component_library/image_1.png',
+      'component_library/image_2.png',
+      'component_library/image_3.png',
+    ],
+    tech: ['Vue', 'SCSS', 'GitHub Pages', 'Design Systems'],
+    links: [
+      {
+        name: 'Component Library',
+        url: 'https://ondiem.github.io/library/',
+      },
+    ],
+  },
  {
   id: 'state-partnerships',
   title: 'State Partnerships',
@@ -305,24 +303,26 @@ export const projects = [
     tech: ['Vue', 'Billing UX', 'Practice Workflows'],
     links: [],
   },
-  {
-    id: 'practice-mobile',
-    title: 'Practice Mobile Experience',
+    {
+    id: 'onboarding',
+    title: 'Onboarding Flow',
     type: 'Professional',
-    category: 'supporting',
+    category: 'featured',
     group: 'professional',
     summary:
-      'Early mobile improvements for a desktop-first practice experience.',
+      'A resumable onboarding workflow that combined several credentialing steps into one guided flow.',
     impact:
-      'Introduced mobile communication and responsive navigation patterns ahead of a larger practice redesign.',
+      'Reduced application friction by allowing users to apply before final license approval while keeping practices protected from unapproved applicants.',
     description:
-      'Our practice experience was getting ready for a major overhaul to allow practice users to use a mobile browser. In its previous state the practice experience was configured only for desktop. I created a pop up that notifies users that we are working on the mobile experience and gives them the opportunity to receive a message when that experience is ready. I also started the first steps of our mobile enhancements by creating a menu drop down to replace the side tabs on smaller devices.',
+      'I enhanced the onboarding flow for our users by utilizing the overlay module from the library to streamline the initial onboarding process. This project combined Basic Information, EEOC, Employee Handbook, Credentials, and Additional Verifications into a single flow. I implemented functionality that allows users to save their progress and resume the onboarding journey at any point, with notifications on the main dashboard that return the user to their spot. Previously a user had to have their state license approved before they could start applying for jobs. Now users can apply for jobs before being approved, substantially improving application time. Practices will only see applications from users that have been approved, and if a user is not approved they receive an email notification when credentials are declined.',
     images: [
-      'practice_mobile/1.png',
-      'practice_mobile/2.png',
-      'practice_mobile/3.png',
+      'onboarding/1.png',
+      'onboarding/2.png',
+      'onboarding/3.png',
+      'onboarding/4.png',
+      'onboarding/5.png',
     ],
-    tech: ['Vue', 'Responsive Design', 'Mobile Navigation'],
+    tech: ['Vue', 'Forms', 'Dashboard UX', 'Credentialing'],
     links: [],
   },
   {
@@ -355,35 +355,6 @@ export const projects = [
       {
         name: 'YouTube Demonstration',
         url: 'https://youtu.be/837LC4l-2mg?si=4VBvupHLTMw_P1Qe',
-      },
-    ],
-  },
-    {
-    id: 'heat',
-    title: 'Bot Predictions for HEAT',
-    type: 'Personal Tool',
-    category: 'featured',
-    group: 'personal',
-    summary:
-      'A Python simulation tool that estimated board game map time and difficulty from bot racing data.',
-    impact:
-      'Ran hundreds of race simulations per map and produced predictions that landed within a few minutes of real play sessions.',
-    description:
-      'This was a fun use of both Python and Excel. I created a Python script that modeled the bot mechanics for the board game HEAT. The bot had functions for reading map values, drawing cards, moving, and handling corners. The race function loaded track data from an Excel spreadsheet with distance from corners, distance from start, corner speed, and other values. I ran hundreds of simulations for every track and logged the data. Time was estimated from average bot turns multiplied by average player turn time. Difficulty was based on patterns in corner rate, since maps where bots passed corners more quickly tended to be harder for players. I posted my findings on the forum and the times were accurate to within two or three minutes of my predictions.',
-    images: [
-      'https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__imagepage/img/k4uPIqjYuWBzofFiCyjSWN6KJow=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6940449.png',
-      'https://cf.geekdo-images.com/GpyIgLpb_eSOsC9Y05nmyw__imagepage/img/enHJ780fj7F8GZsNLtzUylEdhVQ=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427299.png',
-      'https://cf.geekdo-images.com/S1KkjFX5vodPEcF94wGtHQ__imagepage/img/VWH3CKPqRsoHDQ1v76A5VGMMI_o=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427298.png',
-    ],
-    tech: ['Python', 'OpenPyXL', 'Excel', 'Simulation', 'Data Analysis'],
-    links: [
-      {
-        name: 'Github Repo',
-        url: 'https://github.com/Sjskyler27/HEATMAPTEST',
-      },
-      {
-        name: 'Forum Post',
-        url: 'https://boardgamegeek.com/thread/3055787/article/42258347#42258347',
       },
     ],
   },
