@@ -67,6 +67,22 @@ class RetrievalProvider {
     return aliases;
   }
 
+  buildSourceTokens(context) {
+    const sourceProfile = context.sourceProfile || {};
+    const sourceHints = [
+      sourceProfile.role,
+      sourceProfile.jobSummary,
+      ...(Array.isArray(sourceProfile.answerGuidance)
+        ? sourceProfile.answerGuidance
+        : []),
+      ...(Array.isArray(sourceProfile.sortOverride)
+        ? sourceProfile.sortOverride
+        : []),
+    ];
+
+    return context.tokenize(sourceHints.join(" "));
+  }
+
   buildQueryTokens(question, context) {
     return context.tokenize([question, ...this.getQueryAliases(question)].join(" "));
   }
@@ -99,11 +115,14 @@ class RetrievalProvider {
 
   retrieve(question, context, limit = 6) {
     const queryTokens = this.buildQueryTokens(question, context);
+    const scoringTokens = [
+      ...new Set([...queryTokens, ...this.buildSourceTokens(context)]),
+    ];
     const knowledge = context.buildKnowledge();
     const allScored = knowledge
       .map((chunk) => ({
         ...chunk,
-        score: this.scoreChunk(chunk, queryTokens, context),
+        score: this.scoreChunk(chunk, scoringTokens, context),
       }))
       .sort((a, b) => b.score - a.score);
 

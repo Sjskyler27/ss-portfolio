@@ -78,7 +78,7 @@ class GeminiProvider {
                 parts: [
                   {
                     text: [
-                      buildSkylerBotInstructions(),
+                      buildSkylerBotInstructions(context.sourceProfile),
                       '',
                       buildGroundingPrompt(question, retrievalResult.answer),
                     ].join('\n'),

@@ -180,6 +180,8 @@ const tokenAliases = {
 
 let cachedKnowledge = null;
 let cachedKnowledgeStats = null;
+let cachedPublicSources = null;
+let cachedSourceProfiles = null;
 
 function createRequestId() {
   return `skyler-${Date.now().toString(36)}-${Math.random()
@@ -222,13 +224,14 @@ function cleanDiscordValue(value, maxLength = 900) {
   return `${cleanValue.slice(0, maxLength - 3).trim()}...`;
 }
 
-function formatDiscordChatMessage(question, result, requestId) {
+function formatDiscordChatMessage(question, result, requestId, source) {
   const provider = result.debug?.provider || 'unknown';
   const matchCount = Number(result.debug?.matchCount) || 0;
   const lines = [
     '--------------------',
     'Skyler Bot chat',
     `Request: ${requestId}`,
+    `Source: ${cleanDiscordValue(source, 80) || 'unknown'}`,
     `Provider: ${provider}`,
     `Matches: ${matchCount}`,
     `Question: ${cleanDiscordValue(question, 450)}`,
@@ -273,7 +276,12 @@ async function notifyDiscordChat(question, result, requestId, options = {}) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        content: formatDiscordChatMessage(question, result, requestId),
+        content: formatDiscordChatMessage(
+          question,
+          result,
+          requestId,
+          options.source,
+        ),
         flags: suppressNotificationsFlag,
       }),
     });
@@ -336,6 +344,102 @@ function readKnowledgeMarkdown(relativePath) {
   }
 
   return '';
+}
+
+function loadPublicSources() {
+  if (cachedPublicSources) {
+    return cachedPublicSources;
+  }
+
+  try {
+    const sourceInfo = JSON.parse(readTextFile('src/data/source-info.json') || '{}');
+    cachedPublicSources = Array.isArray(sourceInfo.sources)
+      ? sourceInfo.sources
+      : [];
+  } catch (error) {
+    cachedPublicSources = [];
+  }
+
+  return cachedPublicSources;
+}
+
+function normalizeSourceKey(value) {
+  const sourceValue = String(value || '')
+    .trim()
+    .slice(0, 80);
+
+  if (!sourceValue || sourceValue === 'none') {
+    return '';
+  }
+
+  const lowerSourceValue = sourceValue.toLowerCase();
+  const source = loadPublicSources().find((candidate) =>
+    [candidate.id, candidate.key, candidate.urlKey]
+      .map((candidateValue) => String(candidateValue || '').trim().toLowerCase())
+      .includes(lowerSourceValue),
+  );
+
+  return source?.key || sourceValue;
+}
+
+function readSourceInfoText() {
+  const plainPath = findRepoFile('documents/source-info');
+
+  if (plainPath) {
+    return fs.readFileSync(plainPath, 'utf8');
+  }
+
+  const encryptedPath = findRepoFile('documents/source-info.enc');
+
+  if (encryptedPath) {
+    return decryptText(
+      fs.readFileSync(encryptedPath, 'utf8'),
+      process.env,
+      'SOURCE_INFO_KEY',
+    );
+  }
+
+  return '';
+}
+
+function loadSourceProfiles() {
+  if (cachedSourceProfiles) {
+    return cachedSourceProfiles;
+  }
+
+  const sourceInfoText = readSourceInfoText();
+
+  if (!sourceInfoText) {
+    cachedSourceProfiles = [];
+    return cachedSourceProfiles;
+  }
+
+  try {
+    const sourceInfo = JSON.parse(sourceInfoText);
+    cachedSourceProfiles = Array.isArray(sourceInfo.sources)
+      ? sourceInfo.sources
+      : [];
+  } catch (error) {
+    cachedSourceProfiles = [];
+  }
+
+  return cachedSourceProfiles;
+}
+
+function getSourceProfile(sourceKey) {
+  if (!sourceKey) {
+    return null;
+  }
+
+  const lowerSourceKey = sourceKey.toLowerCase();
+
+  return (
+    loadSourceProfiles().find((source) =>
+      [source.id, source.key]
+        .map((value) => String(value || '').trim().toLowerCase())
+        .includes(lowerSourceKey),
+    ) || null
+  );
 }
 
 function loadExportedArray(relativePath, exportName) {
@@ -681,7 +785,7 @@ function convertFirstPersonToThirdPerson(text) {
     .replace(/\bme\b/gi, 'Skyler');
 }
 
-function answerQuestion(question, requestId) {
+function answerQuestion(question, requestId, sourceKey) {
   if (isOffTopicPastedContent(question)) {
     debugLog(requestId, 'off_topic_block', {
       questionLength: question.length,
@@ -745,13 +849,18 @@ function answerQuestion(question, requestId) {
     };
   }
 
+  const sourceProfile = getSourceProfile(sourceKey);
   const provider = getSkylerBotProvider();
   debugLog(requestId, 'provider_selected', {
     provider: provider.name,
+    source: sourceKey || '',
+    hasSourceProfile: Boolean(sourceProfile),
   });
 
   return provider.answerQuestion(question, {
     requestId,
+    sourceKey,
+    sourceProfile,
     buildKnowledge,
     getKnowledgeStats,
     log: (stage, details = {}) => debugLog(requestId, stage, details),
@@ -787,11 +896,13 @@ exports.handler = async (event) => {
   }
 
   const question = normalizeText(payload.question);
+  const source = normalizeSourceKey(payload.source);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
 
   debugLog(requestId, 'request_received', {
     questionLength: question.length,
     questionPreview: previewText(question),
+    source,
     disableDiscordWebhook,
   });
 
@@ -836,8 +947,9 @@ exports.handler = async (event) => {
   }
 
   try {
-    const result = await answerQuestion(question, requestId);
+    const result = await answerQuestion(question, requestId, source);
     await notifyDiscordChat(question, result, requestId, {
+      source,
       disableDiscordWebhook,
     });
 

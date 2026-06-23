@@ -102,7 +102,7 @@ class OpenAIProvider {
         },
         body: JSON.stringify({
           model: this.model,
-          instructions: buildSkylerBotInstructions(),
+          instructions: buildSkylerBotInstructions(context.sourceProfile),
           input: [
             {
               role: 'user',
