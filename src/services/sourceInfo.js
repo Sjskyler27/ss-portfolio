@@ -2,7 +2,7 @@ import sourceInfo from '../data/source-info.json';
 
 const sourceKey = 'portfolio-notify-source';
 const sourceLookup = (sourceInfo.sources || []).reduce((lookup, source) => {
-  const values = [source.id, source.key, source.urlKey]
+  const values = [source.id, source.key, source.urlKey, ...(source.aliases || [])]
     .map((value) => String(value || '').trim().toLowerCase())
     .filter(Boolean);
 

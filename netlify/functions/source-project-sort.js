@@ -66,7 +66,7 @@ function normalizeSourceKey(value) {
 
   const lowerSourceValue = sourceValue.toLowerCase();
   const source = loadPublicSources().find((candidate) =>
-    [candidate.id, candidate.key, candidate.urlKey]
+    [candidate.id, candidate.key, candidate.urlKey, ...(candidate.aliases || [])]
       .map((candidateValue) => String(candidateValue || '').trim().toLowerCase())
       .includes(lowerSourceValue),
   );
@@ -166,7 +166,11 @@ function deterministicSort(projects, sourceProfile) {
   const sourceTokens = tokenize(
     [
       sourceProfile.role,
+      sourceProfile.companySummary,
+      sourceProfile.cultureSummary,
       sourceProfile.jobSummary,
+      ...(sourceProfile.responsibilities || []),
+      ...(sourceProfile.targetSkills || []),
       ...(sourceProfile.answerGuidance || []),
     ].join(' '),
   );
@@ -267,7 +271,11 @@ async function getAiProjectOrder(projects, sourceProfile) {
     'Use only the supplied project IDs. Prefer truthful relevance to the role.',
     '',
     `Source role: ${sourceProfile.role || ''}`,
+    `Company summary: ${sourceProfile.companySummary || ''}`,
+    `Culture summary: ${sourceProfile.cultureSummary || ''}`,
     `Source job summary: ${sourceProfile.jobSummary || ''}`,
+    `Responsibilities: ${(sourceProfile.responsibilities || []).join(' ')}`,
+    `Target skills: ${(sourceProfile.targetSkills || []).join(', ')}`,
     `Source guidance: ${(sourceProfile.answerGuidance || []).join(' ')}`,
     '',
     `Projects: ${JSON.stringify(projectBriefs)}`,

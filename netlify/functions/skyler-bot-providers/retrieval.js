@@ -71,7 +71,15 @@ class RetrievalProvider {
     const sourceProfile = context.sourceProfile || {};
     const sourceHints = [
       sourceProfile.role,
+      sourceProfile.companySummary,
+      sourceProfile.cultureSummary,
       sourceProfile.jobSummary,
+      ...(Array.isArray(sourceProfile.responsibilities)
+        ? sourceProfile.responsibilities
+        : []),
+      ...(Array.isArray(sourceProfile.targetSkills)
+        ? sourceProfile.targetSkills
+        : []),
       ...(Array.isArray(sourceProfile.answerGuidance)
         ? sourceProfile.answerGuidance
         : []),

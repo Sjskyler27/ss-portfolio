@@ -4,7 +4,8 @@
       "id": 1,
       "key": "iconhealth",
       "label": "Icon Health",
-      "urlKey": "iconhealth"
+      "urlKey": "iconhealth",
+      "aliases": ["icon-health", "icon_health", "icon"]
     }
   ]
 }

@@ -10,7 +10,16 @@ function formatSourceGuidance(sourceProfile) {
   return [
     `Visitor source context: ${sourceProfile.label || sourceProfile.key || 'known source'}`,
     sourceProfile.role ? `Likely role focus: ${sourceProfile.role}` : '',
+    sourceProfile.companySummary
+      ? `Company summary: ${sourceProfile.companySummary}`
+      : '',
+    sourceProfile.cultureSummary
+      ? `Culture summary: ${sourceProfile.cultureSummary}`
+      : '',
     sourceProfile.jobSummary ? `Role summary: ${sourceProfile.jobSummary}` : '',
+    Array.isArray(sourceProfile.targetSkills) && sourceProfile.targetSkills.length
+      ? `Target skills: ${sourceProfile.targetSkills.join(', ')}`
+      : '',
     guidance.length
       ? `Source-specific answer guidance: ${guidance.join(' ')}`
       : '',

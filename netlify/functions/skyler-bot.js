@@ -374,7 +374,7 @@ function normalizeSourceKey(value) {
 
   const lowerSourceValue = sourceValue.toLowerCase();
   const source = loadPublicSources().find((candidate) =>
-    [candidate.id, candidate.key, candidate.urlKey]
+    [candidate.id, candidate.key, candidate.urlKey, ...(candidate.aliases || [])]
       .map((candidateValue) => String(candidateValue || '').trim().toLowerCase())
       .includes(lowerSourceValue),
   );
