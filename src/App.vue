@@ -353,10 +353,12 @@ export default {
       projects,
       projectSearch: '',
       projectSort: 'favorites',
+      sourceProjectOrder: [],
       projectGroupFilter: '',
       projectTechFilters: [],
       projectFiltersOpen: false,
       projectSortOptions: [
+        { value: 'relevant', label: 'Most Relevant' },
         { value: 'favorites', label: "Skyler's Favorites" },
         { value: 'title', label: 'Project Name' },
         { value: 'type', label: 'Project Type' },
@@ -427,6 +429,13 @@ export default {
           return a.title.localeCompare(b.title);
         }
 
+        if (this.projectSort === 'relevant') {
+          return (
+            this.getRelevantProjectIndex(a) - this.getRelevantProjectIndex(b) ||
+            this.getFavoriteProjectIndex(a) - this.getFavoriteProjectIndex(b)
+          );
+        }
+
         if (this.projectSort === 'type') {
           return (
             a.type.localeCompare(b.type) ||
@@ -449,7 +458,7 @@ export default {
     hasActiveProjectFilters() {
       return Boolean(
         this.projectSearch ||
-          this.projectSort !== 'favorites' ||
+          this.projectSort !== this.getDefaultProjectSort() ||
           this.projectGroupFilter ||
           this.projectTechFilters.length,
       );
@@ -457,6 +466,7 @@ export default {
   },
   mounted() {
     this.syncViewFromUrl();
+    this.initializeSourceProjectSort();
     this.landingProjectId = getLandingProjectId(this.readyProjects);
     preloadPortfolioImages(this.readyProjects).then(({ landingProjectId }) => {
       this.landingProjectId = landingProjectId || '';
@@ -484,6 +494,14 @@ export default {
     getFavoriteProjectIndex(project) {
       return this.projects.findIndex(({ id }) => id === project.id);
     },
+    getRelevantProjectIndex(project) {
+      const index = this.sourceProjectOrder.indexOf(project.id);
+
+      return index >= 0 ? index : this.projects.length;
+    },
+    getDefaultProjectSort() {
+      return getCurrentSource() ? 'relevant' : 'favorites';
+    },
     formatFilterLabel(value) {
       return String(value)
         .split(/[-_\s]+/)
@@ -493,9 +511,35 @@ export default {
     },
     resetProjectFilters() {
       this.projectSearch = '';
-      this.projectSort = 'favorites';
+      this.projectSort = this.getDefaultProjectSort();
       this.projectGroupFilter = '';
       this.projectTechFilters = [];
+    },
+    async initializeSourceProjectSort() {
+      const source = getCurrentSource();
+
+      if (!source) {
+        return;
+      }
+
+      this.projectSort = 'relevant';
+
+      try {
+        const response = await fetch('/.netlify/functions/source-project-sort', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source }),
+        });
+        const payload = await response.json();
+
+        if (response.ok && Array.isArray(payload.projectIds)) {
+          this.sourceProjectOrder = payload.projectIds;
+        }
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to load source project sort', error);
+        }
+      }
     },
     setView(view, updateUrl = true) {
       this.setCurrentView(view);

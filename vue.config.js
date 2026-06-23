@@ -45,10 +45,18 @@ module.exports = defineConfig({
       }
 
       const { handler: skylerBotHandler } = require('./netlify/functions/skyler-bot');
+      const {
+        handler: sourceProjectSortHandler,
+      } = require('./netlify/functions/source-project-sort');
       registerLocalNetlifyFunction(
         devServer.app,
         '/.netlify/functions/skyler-bot',
         skylerBotHandler
+      );
+      registerLocalNetlifyFunction(
+        devServer.app,
+        '/.netlify/functions/source-project-sort',
+        sourceProjectSortHandler
       );
 
       return middlewares;
