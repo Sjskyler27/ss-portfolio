@@ -518,6 +518,7 @@ function tokenize(value) {
 function createProjectChunks(projects) {
   return projects.filter((project) => !project.notReady).map((project) => ({
     type: 'project',
+    id: project.id,
     title: project.title,
     sourceLabel: `Project: ${project.title}`,
     sourceUrl: `/projects/${encodeURIComponent(project.id)}`,

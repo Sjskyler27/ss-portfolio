@@ -5,7 +5,23 @@
       "key": "iconhealth",
       "label": "Icon Health",
       "urlKey": "iconhealth",
-      "aliases": ["icon-health", "icon_health", "icon"]
+      "aliases": [
+        "icon-health",
+        "icon_health",
+        "icon"
+      ]
+    },
+    {
+      "id": 2,
+      "key": "dave",
+      "label": "Dave",
+      "urlKey": "dave",
+      "aliases": [
+        "simpson-law",
+        "simpson_law",
+        "legal-tech",
+        "legal_tech"
+      ]
     }
   ]
 }

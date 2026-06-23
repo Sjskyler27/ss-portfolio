@@ -113,13 +113,21 @@ class RetrievalProvider {
 
   scoreChunk(chunk, queryTokens, context) {
     const baseScore = context.scoreChunk(chunk, queryTokens);
+    const sourceProfile = context.sourceProfile || {};
+    const sourceProjectIndex = Array.isArray(sourceProfile.sortOverride)
+      ? sourceProfile.sortOverride.indexOf(chunk.id)
+      : -1;
+    const sourceProjectBoost =
+      sourceProjectIndex >= 0 ? Math.max(12, 72 - sourceProjectIndex * 8) : 0;
     const sourceText = `${chunk.title || ""} ${chunk.sourceLabel || ""}`.toLowerCase();
 
     if (/\beducation|school|degree|bachelor\b/i.test(queryTokens.join(" "))) {
-      return /\beducation\b/.test(sourceText) ? baseScore + 12 : baseScore;
+      return /\beducation\b/.test(sourceText)
+        ? baseScore + sourceProjectBoost + 12
+        : baseScore + sourceProjectBoost;
     }
 
-    return baseScore;
+    return baseScore + sourceProjectBoost;
   }
 
   retrieve(question, context, limit = 6) {

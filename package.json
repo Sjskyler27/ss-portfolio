@@ -10,6 +10,7 @@
     "skyler-bot:ask": "node scripts/skyler-bot-ask.js",
     "skyler-bot:encrypt": "node scripts/skyler-bot-encrypt.js",
     "skyler-bot:decrypt": "node scripts/skyler-bot-decrypt.js",
+    "source-info:sort": "node scripts/source-info-sort.js",
     "source-info:encrypt": "node scripts/source-info-encrypt.js",
     "source-info:decrypt": "node scripts/source-info-decrypt.js"
   },
