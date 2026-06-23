@@ -383,13 +383,13 @@ function normalizeSourceKey(value) {
 }
 
 function readSourceInfoText() {
-  const plainPath = findRepoFile('documents/source-info');
+  const plainPath = findRepoFile('documents/source-info.private.json');
 
   if (plainPath) {
     return fs.readFileSync(plainPath, 'utf8');
   }
 
-  const encryptedPath = findRepoFile('documents/source-info.enc');
+  const encryptedPath = findRepoFile('documents/source-info.private.json.enc');
 
   if (encryptedPath) {
     return decryptText(

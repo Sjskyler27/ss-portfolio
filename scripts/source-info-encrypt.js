@@ -11,7 +11,12 @@ const path = require('path');
 const { loadDotEnv } = require('./lib/load-dotenv');
 const { encryptText } = require('../netlify/functions/skyler-bot-providers/secret');
 
-const PLAINTEXT_PATH = path.resolve(__dirname, '..', 'documents', 'source-info');
+const PLAINTEXT_PATH = path.resolve(
+  __dirname,
+  '..',
+  'documents',
+  'source-info.private.json',
+);
 const ENCRYPTED_PATH = `${PLAINTEXT_PATH}.enc`;
 
 function main() {

@@ -17,6 +17,9 @@ function formatSourceGuidance(sourceProfile) {
       ? `Culture summary: ${sourceProfile.cultureSummary}`
       : '',
     sourceProfile.jobSummary ? `Role summary: ${sourceProfile.jobSummary}` : '',
+    sourceProfile.jobDescription
+      ? `Full job description context: ${sourceProfile.jobDescription}`
+      : '',
     Array.isArray(sourceProfile.targetSkills) && sourceProfile.targetSkills.length
       ? `Target skills: ${sourceProfile.targetSkills.join(', ')}`
       : '',

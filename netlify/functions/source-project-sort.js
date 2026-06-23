@@ -75,13 +75,13 @@ function normalizeSourceKey(value) {
 }
 
 function readSourceInfoText() {
-  const plainPath = findRepoFile('documents/source-info');
+  const plainPath = findRepoFile('documents/source-info.private.json');
 
   if (plainPath) {
     return fs.readFileSync(plainPath, 'utf8');
   }
 
-  const encryptedPath = findRepoFile('documents/source-info.enc');
+  const encryptedPath = findRepoFile('documents/source-info.private.json.enc');
 
   if (encryptedPath) {
     return decryptText(
@@ -169,6 +169,7 @@ function deterministicSort(projects, sourceProfile) {
       sourceProfile.companySummary,
       sourceProfile.cultureSummary,
       sourceProfile.jobSummary,
+      sourceProfile.jobDescription,
       ...(sourceProfile.responsibilities || []),
       ...(sourceProfile.targetSkills || []),
       ...(sourceProfile.answerGuidance || []),
@@ -274,6 +275,7 @@ async function getAiProjectOrder(projects, sourceProfile) {
     `Company summary: ${sourceProfile.companySummary || ''}`,
     `Culture summary: ${sourceProfile.cultureSummary || ''}`,
     `Source job summary: ${sourceProfile.jobSummary || ''}`,
+    `Full job description: ${sourceProfile.jobDescription || ''}`,
     `Responsibilities: ${(sourceProfile.responsibilities || []).join(' ')}`,
     `Target skills: ${(sourceProfile.targetSkills || []).join(', ')}`,
     `Source guidance: ${(sourceProfile.answerGuidance || []).join(' ')}`,

@@ -74,6 +74,7 @@ class RetrievalProvider {
       sourceProfile.companySummary,
       sourceProfile.cultureSummary,
       sourceProfile.jobSummary,
+      sourceProfile.jobDescription,
       ...(Array.isArray(sourceProfile.responsibilities)
         ? sourceProfile.responsibilities
         : []),
