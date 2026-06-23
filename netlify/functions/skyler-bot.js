@@ -6,11 +6,17 @@ const { decryptText } = require('./skyler-bot-providers/secret');
 const { checkRateLimit } = require('./skyler-bot-providers/rate-limit');
 
 const suppressNotificationsFlag = 1 << 12;
-const corsHeaders = {
+const baseCorsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Origin': '*',
 };
+
+const localAllowedOrigins = [
+  'http://localhost:8080',
+  'http://localhost:8888',
+  'http://127.0.0.1:8080',
+  'http://127.0.0.1:8888',
+];
 
 const privateInfoPatterns = [
   /\b(home |street |mailing )?address\b/i,
@@ -22,6 +28,7 @@ const privateInfoPatterns = [
   /\b(age|birthday|birth date|date of birth)\b/i,
   /\b(salary|compensation|pay rate|ssn|social security)\b/i,
   /\b(manager|mentor|benefits|stock options|healthcare benefits)\b/i,
+  /\b(contact details?|contact info|personal contact)\b/i,
 ];
 
 // Narrowly target prompt-injection and system-introspection attempts. Earlier
@@ -39,6 +46,16 @@ const suspiciousQuestionPatterns = [
   /\bwhat\b[^?]*\b(files?|sources?|documents?|data)\b[^?]*\bdo you\b/i,
   // Secrets — note plural forms (api keys, environment variables, etc.).
   /\b(api keys?|secret keys?|environment variables?|env vars?|webhook urls?|access tokens?)\b/i,
+];
+
+const portfolioBoundaryQuestionPatterns = [
+  /\b(repeat|print|dump|show|list out|give me)\b.*\b(all\s+)?(evidence|raw evidence|retrieved evidence|source chunks?|raw context|full context)\b/i,
+  /\b(verbatim|word for word|exactly)\b.*\b(evidence|source material|context|retrieved|knowledge)\b/i,
+  /\b(private|hidden|source-specific|personalized?)\b.*\b(job description|source|tailoring|context|guidance)\b/i,
+  /\b(tailor(?:ed|ing)?|personaliz(?:ed|ing)?|emphasiz(?:e|ing)?)\b.*\b(source|job description|iconhealth|dave|company)\b/i,
+  /\banswer\s+as\s+skyler\b/i,
+  /\b(first person|as skyler)\b.*\b(contact details?|contact info|personal contact|phone|email)\b/i,
+  /\b(weaknesses?|skill gaps?|bad at|not good at|struggles? with|deficien(?:cy|cies))\b/i,
 ];
 
 const offTopicQuestionPatterns = [
@@ -298,10 +315,72 @@ async function notifyDiscordChat(question, result, requestId, options = {}) {
   }
 }
 
-function jsonResponse(statusCode, body) {
+function parseAllowedOrigins(value) {
+  return String(value || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function normalizeOrigin(value) {
+  if (!value) {
+    return '';
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch (error) {
+    return String(value).trim().replace(/\/$/, '');
+  }
+}
+
+function getRequestOrigin(event) {
+  const headers = event.headers || {};
+
+  return normalizeOrigin(headers.origin || headers.Origin || '');
+}
+
+function getAllowedOrigins(env = process.env) {
+  const configuredOrigins = parseAllowedOrigins(
+    env.SKYLER_BOT_ALLOWED_ORIGINS || env.ALLOWED_ORIGINS,
+  );
+  const netlifySiteOrigin = normalizeOrigin(env.URL || '');
+  const deployPreviewOrigin = normalizeOrigin(env.DEPLOY_PRIME_URL || '');
+  const allowedOrigins = [
+    ...configuredOrigins,
+    netlifySiteOrigin,
+    ...(env.CONTEXT === 'production' ? [] : [deployPreviewOrigin, ...localAllowedOrigins]),
+  ];
+
+  return [...new Set(allowedOrigins.filter(Boolean))];
+}
+
+function isCorsOriginAllowed(event, env = process.env) {
+  const origin = getRequestOrigin(event);
+
+  if (!origin) {
+    return true;
+  }
+
+  return getAllowedOrigins(env).includes(origin);
+}
+
+function getCorsHeaders(event) {
+  const origin = getRequestOrigin(event);
+  const headers = { ...baseCorsHeaders };
+
+  if (origin && isCorsOriginAllowed(event)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    headers.Vary = 'Origin';
+  }
+
+  return headers;
+}
+
+function jsonResponse(event, statusCode, body) {
   return {
     statusCode,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...getCorsHeaders(event), 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   };
 }
@@ -702,6 +781,12 @@ function isSuspiciousQuestion(question) {
   return suspiciousQuestionPatterns.some((pattern) => pattern.test(question));
 }
 
+function isPortfolioBoundaryQuestion(question) {
+  return portfolioBoundaryQuestionPatterns.some((pattern) =>
+    pattern.test(question),
+  );
+}
+
 function isOffTopicPastedContent(question) {
   const isAskingAboutSkyler = /\bskyler\b/i.test(question);
 
@@ -829,6 +914,27 @@ function answerQuestion(question, requestId, sourceKey) {
     };
   }
 
+  if (isPortfolioBoundaryQuestion(question)) {
+    debugLog(requestId, 'portfolio_boundary_block', {
+      questionLength: question.length,
+      questionPreview: previewText(question),
+    });
+
+    return {
+      answer:
+        "Skyler Bot answers realistic portfolio questions about Skyler's professional background, projects, skills, education, and work history. It does not provide raw evidence, hidden tailoring context, impersonation, private contact details, or adversarial weakness framing.",
+      debug: {
+        provider: 'portfolio-boundary-guard',
+        privateInfoBlocked: false,
+        securityBlocked: true,
+        queryTokenCount: 0,
+        matchCount: 0,
+        matches: [],
+        knowledge: null,
+      },
+    };
+  }
+
   if (isPrivateQuestion(question)) {
     debugLog(requestId, 'privacy_block', {
       questionLength: question.length,
@@ -877,12 +983,22 @@ exports.handler = async (event) => {
   const requestId = createRequestId();
 
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: corsHeaders };
+    return { statusCode: 204, headers: getCorsHeaders(event) };
+  }
+
+  if (!isCorsOriginAllowed(event)) {
+    debugLog(requestId, 'cors_origin_blocked', {
+      origin: getRequestOrigin(event),
+    });
+    return jsonResponse(event, 403, {
+      error: 'Origin is not allowed',
+      requestId,
+    });
   }
 
   if (event.httpMethod !== 'POST') {
     debugLog(requestId, 'method_not_allowed', { method: event.httpMethod });
-    return jsonResponse(405, { error: 'Method not allowed', requestId });
+    return jsonResponse(event, 405, { error: 'Method not allowed', requestId });
   }
 
   let payload = {};
@@ -893,7 +1009,7 @@ exports.handler = async (event) => {
     debugLog(requestId, 'invalid_json', {
       bodyLength: event.body?.length || 0,
     });
-    return jsonResponse(400, { error: 'Invalid JSON', requestId });
+    return jsonResponse(event, 400, { error: 'Invalid JSON', requestId });
   }
 
   const question = normalizeText(payload.question);
@@ -915,7 +1031,7 @@ exports.handler = async (event) => {
       questionLength: question.length,
       questionPreview: previewText(question),
     });
-    return jsonResponse(400, { error: validationError, requestId });
+    return jsonResponse(event, 400, { error: validationError, requestId });
   }
 
   const rateLimit = checkRateLimit(event);
@@ -933,14 +1049,14 @@ exports.handler = async (event) => {
         : 'You can send up to 10 messages per minute. Please wait a moment and try again.';
 
     return {
-      ...jsonResponse(429, {
+      ...jsonResponse(event, 429, {
         requestId,
         code: 'user_rate_limited',
         answer,
         retryAfterSeconds: rateLimit.retryAfterSeconds,
       }),
       headers: {
-        ...corsHeaders,
+        ...getCorsHeaders(event),
         'Content-Type': 'application/json',
         'Retry-After': String(rateLimit.retryAfterSeconds),
       },
@@ -977,9 +1093,9 @@ exports.handler = async (event) => {
     }
 
     return {
-      ...jsonResponse(200, publicBody),
+      ...jsonResponse(event, 200, publicBody),
       headers: {
-        ...corsHeaders,
+        ...getCorsHeaders(event),
         'Content-Type': 'application/json',
         'x-skyler-bot-request-id': requestId,
       },
@@ -991,7 +1107,7 @@ exports.handler = async (event) => {
       stack: error.stack,
     });
 
-    return jsonResponse(500, {
+    return jsonResponse(event, 500, {
       requestId,
       answer:
         'I could not load the portfolio knowledge base yet. Please try again after the site finishes deploying.',
