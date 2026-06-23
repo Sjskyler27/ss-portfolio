@@ -412,7 +412,7 @@ function tokenize(value) {
 }
 
 function createProjectChunks(projects) {
-  return projects.map((project) => ({
+  return projects.filter((project) => !project.notReady).map((project) => ({
     type: 'project',
     title: project.title,
     sourceLabel: `Project: ${project.title}`,
@@ -529,6 +529,7 @@ function buildKnowledge() {
   }
 
   const projects = loadExportedArray('src/data/projects.js', 'projects');
+  const readyProjects = projects.filter((project) => !project.notReady);
   const experienceItems = loadExportedArray(
     'src/data/experience.js',
     'experienceItems',
@@ -553,12 +554,12 @@ function buildKnowledge() {
   cachedKnowledge = [
     ...generalChunks,
     ...createExperienceChunks(experienceItems),
-    ...createProjectChunks(projects),
+    ...createProjectChunks(readyProjects),
     ...createMarkdownChunks(
       'documents/skyler-bot-profile.md',
       'Skyler Bot information file',
       'info',
-      projects,
+      readyProjects,
       experienceItems,
     ),
   ].map((chunk) => ({

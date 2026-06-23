@@ -78,7 +78,8 @@ export const projects = [
   },
   {
     id: 'everee_payroll_integration',
-    title: 'Everee Payroll API Integration (Rust)',
+    title: 'Everee Payroll API Integration',
+    notReady: true,
     type: 'Professional Work',
     category: 'featured',
     group: 'backend',
