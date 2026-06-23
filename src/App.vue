@@ -333,6 +333,7 @@ import {
   preloadPortfolioImages,
   resolvePhotoAsset,
 } from './services/imagePreloader';
+import { getCurrentSource } from './services/sourceInfo';
 import {
   notifyExternalSite,
   notifyPortfolioSessionEnd,
@@ -610,7 +611,7 @@ export default {
       notifyExternalSite(link, this.selectedProject);
     },
     withSourceQuery(path) {
-      const source = new URLSearchParams(window.location.search).get('source');
+      const source = getCurrentSource();
 
       if (!source || path.includes('?')) {
         return path;

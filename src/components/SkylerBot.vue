@@ -166,6 +166,8 @@
 </template>
 
 <script>
+import { getCurrentSource } from '../services/sourceInfo';
+
 const storageKey = 'skyler-bot-chat-history';
 const disableDiscordWebhookKey = 'disable_discord_webhook';
 const rateLimitKey = 'skyler-bot-rate-history';
@@ -411,6 +413,7 @@ export default {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             question,
+            source: getCurrentSource(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
         });

@@ -1,4 +1,5 @@
 import { notificationNames } from "../data/notificationNames";
+import { getCurrentSource } from "./sourceInfo";
 
 const notificationPath = "/.netlify/functions/notify-view";
 const activityKey = "portfolio-notify-activities";
@@ -6,7 +7,6 @@ const activeStateKey = "portfolio-notify-active-state";
 const sessionClosedKey = "portfolio-notify-session-closed";
 const sessionInfoKey = "portfolio-notify-session";
 const sessionCountKey = "portfolio-notify-session-count";
-const sourceKey = "portfolio-notify-source";
 const userKey = "portfolio-notify-user";
 const disableWebhookKey = "disable_discord_webhook";
 
@@ -29,12 +29,7 @@ function getSource() {
     return "";
   }
 
-  if (source) {
-    setStoredValue(localStorage, sourceKey, source);
-    return source;
-  }
-
-  return getStoredValue(localStorage, sourceKey);
+  return getCurrentSource();
 }
 
 function getStoredValue(storage, key) {
