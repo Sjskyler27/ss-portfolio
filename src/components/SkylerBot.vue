@@ -977,25 +977,26 @@ export default {
 
 .typing-dots {
   display: inline-flex;
-  height: 18px;
+  height: 20px;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  padding: 2px 1px;
 }
 
 .typing-dots span {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: rgba(255, 247, 237, 0.8);
-  animation: skyler-bot-typing 900ms ease-in-out infinite;
+  background: #124a80;
+  animation: skyler-bot-typing 1s ease-in-out infinite;
 }
 
 .typing-dots span:nth-child(2) {
-  animation-delay: 120ms;
+  animation-delay: 140ms;
 }
 
 .typing-dots span:nth-child(3) {
-  animation-delay: 240ms;
+  animation-delay: 280ms;
 }
 
 .skyler-bot-suggestions {
@@ -1222,15 +1223,19 @@ export default {
 
 @keyframes skyler-bot-typing {
   0%,
-  80%,
   100% {
-    opacity: 0.45;
+    opacity: 0.35;
     transform: translateY(0);
   }
 
-  40% {
+  35% {
     opacity: 1;
-    transform: translateY(-4px);
+    transform: translateY(-5px);
+  }
+
+  70% {
+    opacity: 0.55;
+    transform: translateY(0);
   }
 }
 
