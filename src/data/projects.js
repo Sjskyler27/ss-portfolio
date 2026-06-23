@@ -106,35 +106,6 @@ export const projects = [
     links: [],
   },
   {
-    id: 'heat',
-    title: 'Bot Predictions for HEAT',
-    type: 'Personal Tool',
-    category: 'featured',
-    group: 'personal',
-    summary:
-      'A Python simulation tool that estimated board game map time and difficulty from bot racing data.',
-    impact:
-      'Ran hundreds of race simulations per map and produced predictions that landed within a few minutes of real play sessions.',
-    description:
-      'This was a fun use of both Python and Excel. I created a Python script that modeled the bot mechanics for the board game HEAT. The bot had functions for reading map values, drawing cards, moving, and handling corners. The race function loaded track data from an Excel spreadsheet with distance from corners, distance from start, corner speed, and other values. I ran hundreds of simulations for every track and logged the data. Time was estimated from average bot turns multiplied by average player turn time. Difficulty was based on patterns in corner rate, since maps where bots passed corners more quickly tended to be harder for players. I posted my findings on the forum and the times were accurate to within two or three minutes of my predictions.',
-    images: [
-      'https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__imagepage/img/k4uPIqjYuWBzofFiCyjSWN6KJow=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6940449.png',
-      'https://cf.geekdo-images.com/GpyIgLpb_eSOsC9Y05nmyw__imagepage/img/enHJ780fj7F8GZsNLtzUylEdhVQ=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427299.png',
-      'https://cf.geekdo-images.com/S1KkjFX5vodPEcF94wGtHQ__imagepage/img/VWH3CKPqRsoHDQ1v76A5VGMMI_o=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427298.png',
-    ],
-    tech: ['Python', 'OpenPyXL', 'Excel', 'Simulation', 'Data Analysis'],
-    links: [
-      {
-        name: 'Github Repo',
-        url: 'https://github.com/Sjskyler27/HEATMAPTEST',
-      },
-      {
-        name: 'Forum Post',
-        url: 'https://boardgamegeek.com/thread/3055787/article/42258347#42258347',
-      },
-    ],
-  },
-  {
     id: 'wordis',
     title: 'Wordis',
     type: 'Hackathon',
@@ -396,6 +367,35 @@ export const projects = [
     ],
     tech: ['Vue', 'Forms', 'Dashboard UX', 'Credentialing'],
     links: [],
+  },
+  {
+    id: 'heat',
+    title: 'Bot Predictions for HEAT',
+    type: 'Personal Tool',
+    category: 'featured',
+    group: 'personal',
+    summary:
+      'A Python simulation tool that estimated board game map time and difficulty from bot racing data.',
+    impact:
+      'Ran hundreds of race simulations per map and produced predictions that landed within a few minutes of real play sessions.',
+    description:
+      'This was a fun use of both Python and Excel. I created a Python script that modeled the bot mechanics for the board game HEAT. The bot had functions for reading map values, drawing cards, moving, and handling corners. The race function loaded track data from an Excel spreadsheet with distance from corners, distance from start, corner speed, and other values. I ran hundreds of simulations for every track and logged the data. Time was estimated from average bot turns multiplied by average player turn time. Difficulty was based on patterns in corner rate, since maps where bots passed corners more quickly tended to be harder for players. I posted my findings on the forum and the times were accurate to within two or three minutes of my predictions.',
+    images: [
+      'https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__imagepage/img/k4uPIqjYuWBzofFiCyjSWN6KJow=/fit-in/900x600/filters:no_upscale():strip_icc()/pic6940449.png',
+      'https://cf.geekdo-images.com/GpyIgLpb_eSOsC9Y05nmyw__imagepage/img/enHJ780fj7F8GZsNLtzUylEdhVQ=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427299.png',
+      'https://cf.geekdo-images.com/S1KkjFX5vodPEcF94wGtHQ__imagepage/img/VWH3CKPqRsoHDQ1v76A5VGMMI_o=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7427298.png',
+    ],
+    tech: ['Python', 'OpenPyXL', 'Excel', 'Simulation', 'Data Analysis'],
+    links: [
+      {
+        name: 'Github Repo',
+        url: 'https://github.com/Sjskyler27/HEATMAPTEST',
+      },
+      {
+        name: 'Forum Post',
+        url: 'https://boardgamegeek.com/thread/3055787/article/42258347#42258347',
+      },
+    ],
   },
   {
     id: 'codenames',

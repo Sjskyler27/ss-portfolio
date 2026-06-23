@@ -182,8 +182,11 @@ function deterministicSort(projects, sourceProfile) {
         [
           project.title,
           project.type,
+          project.group,
+          project.category,
           project.summary,
           project.impact,
+          project.description,
           (project.tech || []).join(' '),
         ].join(' '),
       );
@@ -262,8 +265,11 @@ async function getAiProjectOrder(projects, sourceProfile) {
     id: project.id,
     title: project.title,
     type: project.type,
+    group: project.group,
+    category: project.category,
     summary: project.summary,
     impact: project.impact,
+    description: project.description,
     tech: project.tech || [],
   }));
   const prompt = [
@@ -342,11 +348,11 @@ async function getAiProjectOrder(projects, sourceProfile) {
   return parseProjectOrder(text, projects);
 }
 
-function fillMissingProjectIds(projectIds, projects) {
+function fillMissingProjectIds(projectIds, fallbackProjectIds) {
   const seen = new Set(projectIds);
   return [
     ...projectIds,
-    ...projects.map((project) => project.id).filter((id) => !seen.has(id)),
+    ...fallbackProjectIds.filter((id) => !seen.has(id)),
   ];
 }
 
@@ -382,6 +388,7 @@ exports.handler = async (event) => {
   const projects = loadExportedArray('src/data/projects.js', 'projects').filter(
     (project) => !project.notReady,
   );
+  const localProjectIds = deterministicSort(projects, sourceProfile);
   const overrideIds = Array.isArray(sourceProfile.sortOverride)
     ? sourceProfile.sortOverride.filter((id) =>
         projects.some((project) => project.id === id),
@@ -391,7 +398,7 @@ exports.handler = async (event) => {
   if (overrideIds.length) {
     return jsonResponse(200, {
       source,
-      projectIds: fillMissingProjectIds(overrideIds, projects),
+      projectIds: fillMissingProjectIds(overrideIds, localProjectIds),
       strategy: 'override',
     });
   }
@@ -402,7 +409,7 @@ exports.handler = async (event) => {
     if (aiOrder.length) {
       return jsonResponse(200, {
         source,
-        projectIds: fillMissingProjectIds(aiOrder, projects),
+        projectIds: fillMissingProjectIds(aiOrder, localProjectIds),
         strategy: 'ai',
       });
     }
@@ -412,7 +419,7 @@ exports.handler = async (event) => {
 
   return jsonResponse(200, {
     source,
-    projectIds: deterministicSort(projects, sourceProfile),
+    projectIds: localProjectIds,
     strategy: 'local',
   });
 };
