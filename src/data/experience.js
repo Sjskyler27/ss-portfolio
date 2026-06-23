@@ -29,9 +29,9 @@ export const experienceItems = [
   },
   {
     organization: "Education",
-    title: "Software Engineering",
+    title: "Web Development",
     description:
-      "Earned a BS in Software Engineering from BYU-Idaho with a Web Development certificate, completing full-stack coursework, database projects, team builds, and hackathon-style development work.",
+      "Earned a Bachelor of Science in Web Development from BYU-Idaho, completing full-stack coursework, database projects, team builds, and hackathon-style development work.",
     tags: ["Bachelors Degree","Web development", "Databases", "Full-stack projects", ],
   },
 ];
