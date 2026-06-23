@@ -187,10 +187,13 @@
       />
     </div>
     </Transition>
+
+    <SkylerBot />
   </main>
 </template>
 
 <script>
+import SkylerBot from "./components/SkylerBot";
 import { experienceItems } from "./data/experience";
 import { projects } from "./data/projects";
 import {
@@ -208,6 +211,9 @@ import {
 
 export default {
   name: "App",
+  components: {
+    SkylerBot,
+  },
   data() {
     return {
       experienceItems,
