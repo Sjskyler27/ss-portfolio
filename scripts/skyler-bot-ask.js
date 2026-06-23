@@ -8,12 +8,13 @@
 // Usage:
 //   npm run skyler-bot:ask -- "What is Skyler's AI experience?"
 //   npm run skyler-bot:ask -- --provider=openai "Does he know Vue?"
+//   npm run skyler-bot:ask -- --source=iconhealth "What projects fit this role?"
 //   npm run skyler-bot:ask -- --quiet "Where did he go to school?"
 
 const { loadDotEnv } = require('./lib/load-dotenv');
 
 function parseArgs(argv) {
-  const options = { quiet: false, provider: '', question: '' };
+  const options = { quiet: false, provider: '', source: '', question: '' };
   const rest = [];
 
   for (const arg of argv) {
@@ -21,6 +22,8 @@ function parseArgs(argv) {
       options.quiet = true;
     } else if (arg.startsWith('--provider=')) {
       options.provider = arg.slice('--provider='.length);
+    } else if (arg.startsWith('--source=')) {
+      options.source = arg.slice('--source='.length);
     } else {
       rest.push(arg);
     }
@@ -37,7 +40,7 @@ async function main() {
 
   if (!options.question) {
     console.error(
-      'Usage: npm run skyler-bot:ask -- [--provider=<name>] [--quiet] "your question"',
+      'Usage: npm run skyler-bot:ask -- [--provider=<name>] [--source=<source>] [--quiet] "your question"',
     );
     process.exit(1);
   }
@@ -45,6 +48,8 @@ async function main() {
   if (options.provider) {
     process.env.AI_PROVIDER = options.provider;
   }
+
+  const source = options.source || process.env.SKYLER_BOT_ASK_SOURCE || '';
 
   // Expose debug so we can inspect retrieval/fallback; the public response
   // strips it otherwise.
@@ -57,7 +62,11 @@ async function main() {
   const response = await handler({
     httpMethod: 'POST',
     headers: { 'x-nf-client-connection-ip': 'cli-local' },
-    body: JSON.stringify({ question: options.question, disableDiscordWebhook: true }),
+    body: JSON.stringify({
+      question: options.question,
+      source,
+      disableDiscordWebhook: true,
+    }),
   });
   const elapsedMs = Date.now() - startedAt;
 
@@ -73,6 +82,9 @@ async function main() {
 
   console.log('');
   console.log(`Q: ${options.question}`);
+  if (source) {
+    console.log(`Source: ${source}`);
+  }
   console.log('—'.repeat(60));
   console.log(payload.answer || payload.error || '(no answer)');
   console.log('—'.repeat(60));
@@ -82,6 +94,7 @@ async function main() {
       JSON.stringify(
         {
           status: response.statusCode,
+          source,
           provider: debug.provider || '',
           model: debug.model || '',
           code: payload.code || '',
