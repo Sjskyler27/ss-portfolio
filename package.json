@@ -9,7 +9,9 @@
     "skyler-bot:smoke": "node scripts/skyler-bot-smoke.js",
     "skyler-bot:ask": "node scripts/skyler-bot-ask.js",
     "skyler-bot:encrypt": "node scripts/skyler-bot-encrypt.js",
-    "skyler-bot:decrypt": "node scripts/skyler-bot-decrypt.js"
+    "skyler-bot:decrypt": "node scripts/skyler-bot-decrypt.js",
+    "source-info:encrypt": "node scripts/source-info-encrypt.js",
+    "source-info:decrypt": "node scripts/source-info-decrypt.js"
   },
   "dependencies": {
     "core-js": "^3.8.3",

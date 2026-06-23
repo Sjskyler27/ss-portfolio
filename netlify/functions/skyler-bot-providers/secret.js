@@ -7,20 +7,20 @@ const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 const VERSION_PREFIX = 'v1:';
 
-function getKey(env = process.env) {
-  const hexKey = String(env.BOT_INFO_KEY || '').trim();
+function getKey(env = process.env, envName = 'BOT_INFO_KEY') {
+  const hexKey = String(env[envName] || '').trim();
 
   if (!/^[0-9a-fA-F]{64}$/.test(hexKey)) {
     throw new Error(
-      'BOT_INFO_KEY must be a 64-character hex string (32 bytes for AES-256).',
+      `${envName} must be a 64-character hex string (32 bytes for AES-256).`,
     );
   }
 
   return Buffer.from(hexKey, 'hex');
 }
 
-function encryptText(plaintext, env = process.env) {
-  const key = getKey(env);
+function encryptText(plaintext, env = process.env, envName = 'BOT_INFO_KEY') {
+  const key = getKey(env, envName);
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   const ciphertext = Buffer.concat([
@@ -34,8 +34,8 @@ function encryptText(plaintext, env = process.env) {
   )}\n`;
 }
 
-function decryptText(payload, env = process.env) {
-  const key = getKey(env);
+function decryptText(payload, env = process.env, envName = 'BOT_INFO_KEY') {
+  const key = getKey(env, envName);
   const trimmed = String(payload || '').trim();
   const body = trimmed.startsWith(VERSION_PREFIX)
     ? trimmed.slice(VERSION_PREFIX.length)
