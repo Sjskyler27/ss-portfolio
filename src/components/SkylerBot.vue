@@ -102,15 +102,29 @@
         </div>
 
         <form class="skyler-bot-form" @submit.prevent="sendMessage">
-          <textarea
-            v-model.trim="draft"
-            rows="2"
-            maxlength="250"
-            :disabled="isLoading"
-            placeholder="Ask about Skyler's experience..."
-            @input="sanitizeDraft"
-            @keydown.enter.exact.prevent="sendMessage"
-          />
+          <div class="skyler-bot-input-wrap" :style="textareaStyle">
+            <button
+              type="button"
+              class="skyler-bot-input-resize-handle"
+              aria-label="Resize message input"
+              title="Resize message input"
+              @pointerdown="startTextareaResize"
+              @keydown="resizeTextareaWithKeyboard"
+            >
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3 3h8v2H5v6H3V3Zm4 4h6v2H9v4H7V7Z" />
+              </svg>
+            </button>
+            <textarea
+              v-model.trim="draft"
+              rows="2"
+              maxlength="250"
+              :disabled="isLoading"
+              placeholder="Ask about Skyler's experience..."
+              @input="sanitizeDraft"
+              @keydown.enter.exact.prevent="sendMessage"
+            />
+          </div>
           <button type="submit" :disabled="!canSend || isLoading">
             <span
               v-if="isLoading"
@@ -267,7 +281,9 @@ export default {
         width: 392,
         height: 540,
       },
+      textareaHeight: 44,
       resizeState: null,
+      textareaResizeState: null,
       suggestedQuestions,
     };
   },
@@ -276,12 +292,19 @@ export default {
   },
   beforeUnmount() {
     this.stopPanelResize();
+    this.stopTextareaResize();
+    this.stopOutsideClickListener();
   },
   computed: {
     panelStyle() {
       return {
         width: `${this.panelSize.width}px`,
         height: `${this.panelSize.height}px`,
+      };
+    },
+    textareaStyle() {
+      return {
+        height: `${this.textareaHeight}px`,
       };
     },
     canSend() {
@@ -299,6 +322,15 @@ export default {
     },
   },
   watch: {
+    isOpen(isOpen) {
+      if (isOpen) {
+        this.startOutsideClickListener();
+        this.scrollMessagesToEnd();
+        return;
+      }
+
+      this.stopOutsideClickListener();
+    },
     messages: {
       deep: true,
       handler() {
@@ -318,7 +350,27 @@ export default {
     },
     toggleChat() {
       this.isOpen = !this.isOpen;
-      this.scrollMessagesToEnd();
+    },
+    startOutsideClickListener() {
+      if (typeof document === 'undefined') {
+        return;
+      }
+
+      document.addEventListener('pointerdown', this.closeChatOnOutsideClick);
+    },
+    stopOutsideClickListener() {
+      if (typeof document === 'undefined') {
+        return;
+      }
+
+      document.removeEventListener('pointerdown', this.closeChatOnOutsideClick);
+    },
+    closeChatOnOutsideClick(event) {
+      if (!this.isOpen || this.$el?.contains(event.target)) {
+        return;
+      }
+
+      this.isOpen = false;
     },
     async sendMessage() {
       const question = this.draft.trim();
@@ -577,6 +629,9 @@ export default {
         height: Math.min(Math.max(height, bounds.minHeight), bounds.maxHeight),
       };
     },
+    clampTextareaHeight(height) {
+      return Math.min(Math.max(height, 44), 140);
+    },
     startPanelResize(event) {
       if (typeof window === 'undefined' || event.pointerType === 'touch') {
         return;
@@ -642,6 +697,67 @@ export default {
       window.removeEventListener('pointerup', this.stopPanelResize);
       window.removeEventListener('pointercancel', this.stopPanelResize);
     },
+    startTextareaResize(event) {
+      if (typeof window === 'undefined' || event.pointerType === 'touch') {
+        return;
+      }
+
+      event.preventDefault();
+
+      this.textareaResizeState = {
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        startHeight: this.textareaHeight,
+      };
+
+      document.body.classList.add('skyler-bot-input-resizing');
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      window.addEventListener('pointermove', this.resizeTextarea);
+      window.addEventListener('pointerup', this.stopTextareaResize);
+      window.addEventListener('pointercancel', this.stopTextareaResize);
+    },
+    resizeTextarea(event) {
+      if (
+        !this.textareaResizeState ||
+        event.pointerId !== this.textareaResizeState.pointerId
+      ) {
+        return;
+      }
+
+      this.textareaHeight = this.clampTextareaHeight(
+        this.textareaResizeState.startHeight +
+          this.textareaResizeState.startY -
+          event.clientY,
+      );
+    },
+    resizeTextareaWithKeyboard(event) {
+      const step = event.shiftKey ? 24 : 8;
+      const directions = {
+        ArrowUp: step,
+        ArrowDown: -step,
+      };
+      const direction = directions[event.key];
+
+      if (!direction) {
+        return;
+      }
+
+      event.preventDefault();
+      this.textareaHeight = this.clampTextareaHeight(
+        this.textareaHeight + direction,
+      );
+    },
+    stopTextareaResize() {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      this.textareaResizeState = null;
+      document.body.classList.remove('skyler-bot-input-resizing');
+      window.removeEventListener('pointermove', this.resizeTextarea);
+      window.removeEventListener('pointerup', this.stopTextareaResize);
+      window.removeEventListener('pointercancel', this.stopTextareaResize);
+    },
     scrollMessagesToEnd() {
       this.$nextTick(() => {
         const messageList = this.$refs.messageList?.$el;
@@ -685,22 +801,22 @@ export default {
     rgba(255, 250, 244, 0.98),
     rgba(237, 247, 246, 0.98)
   );
-  box-shadow: 0 24px 70px rgba(20, 49, 79, 0.26);
+  box-shadow: 0 24px 70px rgba(18, 74, 128, 0.26);
   backdrop-filter: blur(12px);
 }
 
 .skyler-bot-resize-handle {
   position: absolute;
-  top: -9px;
-  left: -9px;
+  top: -1px;
+  left: -1px;
   z-index: 2;
   display: inline-flex;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   align-items: center;
   justify-content: center;
   border: 1px solid rgba(241, 143, 85, 0.5);
-  border-radius: 8px;
+  border-radius: 8px 0 8px 0px;
   background: rgba(255, 250, 244, 0.96);
   color: #a3442f;
   box-shadow: 0 10px 24px rgba(163, 68, 47, 0.16);
@@ -712,7 +828,7 @@ export default {
 .skyler-bot-resize-handle:hover,
 .skyler-bot-resize-handle:focus-visible {
   background: #f18f55;
-  color: #193a5a;
+  color: #124a80;
   outline: none;
   transform: translate(-1px, -1px);
 }
@@ -735,7 +851,7 @@ export default {
   gap: 14px;
   border-bottom: 1px solid rgba(38, 113, 111, 0.14);
   background: rgba(255, 250, 244, 0.74);
-  color: #193a5a;
+  color: #124a80;
   padding: 14px;
 }
 
@@ -755,7 +871,7 @@ export default {
   justify-content: center;
   border-radius: 8px;
   background: rgba(255, 247, 237, 0.8);
-  color: #193a5a;
+  color: #124a80;
 }
 
 .skyler-bot-avatar svg {
@@ -778,7 +894,7 @@ export default {
 
 .skyler-bot-header button,
 .skyler-bot-toggle,
-.skyler-bot-form button {
+.skyler-bot-form > button {
   border: 0;
   cursor: pointer;
   font-weight: 800;
@@ -788,8 +904,8 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: rgba(25, 58, 90, 0.08);
-  color: #193a5a;
+  background: rgba(18, 74, 128, 0.08);
+  color: #124a80;
   font-size: 24px;
   line-height: 1;
 }
@@ -842,17 +958,17 @@ export default {
   border: 1px solid rgba(38, 113, 111, 0.12);
   background: rgba(255, 255, 255, 0.72);
   color: #213136;
-  box-shadow: 0 8px 18px rgba(25, 58, 90, 0.06);
+  box-shadow: 0 8px 18px rgba(18, 74, 128, 0.06);
 }
 
 .skyler-bot-message.user {
   align-self: flex-end;
   background: rgba(255, 247, 237, 0.8);
-  color: #193a5a;
+  color: #124a80;
 }
 
 .skyler-bot-message.user time {
-  color: rgba(25, 58, 90, 0.66);
+  color: rgba(18, 74, 128, 0.66);
 }
 
 .skyler-bot-message.loading {
@@ -895,7 +1011,7 @@ export default {
   border: 1px solid rgba(38, 113, 111, 0.28);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.85);
-  color: #193a5a;
+  color: #124a80;
   padding: 7px 12px;
   font-family: inherit;
   font-size: 12.5px;
@@ -907,7 +1023,7 @@ export default {
 
 .skyler-bot-suggestion:hover:not(:disabled) {
   background: #f18f55;
-  color: #193a5a;
+  color: #124a80;
   border-color: #f18f55;
   transform: translateY(-1px);
 }
@@ -926,11 +1042,17 @@ export default {
   padding: 12px;
 }
 
-.skyler-bot-form textarea {
-  width: 100%;
+.skyler-bot-input-wrap {
+  position: relative;
   min-height: 44px;
-  max-height: 110px;
-  resize: vertical;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.skyler-bot-input-wrap textarea {
+  width: 100%;
+  height: 100%;
+  resize: none;
   border: 1px solid rgba(38, 113, 111, 0.2);
   border-radius: 8px;
   background: #ffffff;
@@ -938,21 +1060,68 @@ export default {
   font-family: inherit;
   font-size: 14px;
   line-height: 1.35;
-  padding: 9px 10px;
+  padding: 13px 12px 10px 18px;
 }
 
-.skyler-bot-form button {
+.skyler-bot-input-wrap textarea:focus {
+  border-color: #124a80;
+  outline: 2px solid rgba(18, 74, 128, 0.22);
+  outline-offset: 1px;
+}
+
+.skyler-bot-input-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(241, 143, 85, 0.5);
+  border-radius: 8px 0 8px 0;
+  background: rgba(255, 250, 244, 0.96);
+  color: #a3442f;
+  line-height: 1;
+  padding: 0;
+  box-shadow: 0 8px 16px rgba(163, 68, 47, 0.12);
+  cursor: ns-resize;
+  touch-action: none;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.skyler-bot-input-resize-handle:hover,
+.skyler-bot-input-resize-handle:focus-visible {
+  background: #f18f55;
+  color: #124a80;
+  outline: none;
+}
+
+.skyler-bot-input-resize-handle svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
+:global(.skyler-bot-input-resizing) {
+  cursor: ns-resize;
+  user-select: none;
+}
+
+.skyler-bot-form > button {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
   background: rgba(255, 247, 237, 0.8);
-  color: #193a5a;
+  color: #124a80;
   transition: background 160ms ease, transform 160ms ease;
 }
 
-.skyler-bot-form button svg {
+.skyler-bot-form > button svg {
   width: 22px;
   height: 22px;
   fill: currentColor;
@@ -961,8 +1130,8 @@ export default {
 .send-loading {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(25, 58, 90, 0.24);
-  border-top-color: #193a5a;
+  border: 2px solid rgba(18, 74, 128, 0.24);
+  border-top-color: #124a80;
   border-radius: 50%;
   animation: skyler-bot-spin 720ms linear infinite;
 }
@@ -976,12 +1145,12 @@ export default {
   white-space: nowrap;
 }
 
-.skyler-bot-form button:not(:disabled):hover {
+.skyler-bot-form > button:not(:disabled):hover {
   background: rgba(255, 247, 237, 0.8);
   transform: translateY(-1px);
 }
 
-.skyler-bot-form button:disabled {
+.skyler-bot-form > button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
@@ -1003,7 +1172,7 @@ export default {
   border-radius: 50%;
   background-color: rgba(255, 247, 237, 0.8);
   border: 2px solid #f18f55;
-  color: #193a5a;
+  color: #124a80;
   box-shadow: 0 16px 34px rgba(163, 68, 47, 0.24);
   transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
