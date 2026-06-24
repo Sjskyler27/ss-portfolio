@@ -27,12 +27,19 @@ class RetrievalProvider {
   getQueryAliases(question) {
     const aliases = [];
     const lowerQuestion = question.toLowerCase();
+    const specificToolPattern =
+      /\b(docker|linux|ubuntu|wsl|sharepoint|onedrive|microsoft graph|lawmatics|php|powershell|bash|sql|backend|frontend)\b/;
+    const asksSpecificToolExperience =
+      specificToolPattern.test(lowerQuestion) && /\bexperience\b/.test(lowerQuestion);
 
     if (/\b(tell me about skyler|who is skyler|about skyler)\b/.test(lowerQuestion)) {
       aliases.push("background", "frontend", "full-stack", "projects", "skills");
     }
 
-    if (/\b(history|background|work history|experience)\b/.test(lowerQuestion)) {
+    if (
+      /\b(history|background|work history)\b/.test(lowerQuestion) ||
+      (/\bexperience\b/.test(lowerQuestion) && !asksSpecificToolExperience)
+    ) {
       aliases.push("ondiem", "stonecrest", "professional", "experience");
     }
 
@@ -165,8 +172,26 @@ class RetrievalProvider {
     return context.tokenize(sourceHints.join(" "));
   }
 
+  shouldUseFollowUpContext(question, context) {
+    if (!context.isFollowUpQuestion) {
+      return false;
+    }
+
+    const lowerQuestion = String(question || "").toLowerCase();
+
+    if (
+      /\b(docker|linux|ubuntu|wsl|sharepoint|onedrive|microsoft graph|lawmatics|php|powershell|bash|sql|backend|frontend|education|school|degree)\b/.test(
+        lowerQuestion
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
   buildQueryTokens(question, context) {
-    const followUpContext = context.isFollowUpQuestion
+    const followUpContext = this.shouldUseFollowUpContext(question, context)
       ? context.conversationContext || ""
       : "";
 
@@ -265,14 +290,19 @@ class RetrievalProvider {
     const repeatedProjectPenalty =
       repeatedProjectCount >= 2 ? 132 : repeatedProjectCount === 1 ? 58 : 0;
     const sourceText = `${chunk.title || ""} ${chunk.sourceLabel || ""}`.toLowerCase();
+    const tagBoost = (chunk.tags || []).some((tag) =>
+      context.tokenize(tag).some((tagToken) => queryTokens.includes(tagToken))
+    )
+      ? 10
+      : 0;
 
     if (/\beducation|school|degree|bachelor\b/i.test(queryTokens.join(" "))) {
       return /\beducation\b/.test(sourceText)
-        ? baseScore + sourceProjectBoost - repeatedProjectPenalty + 12
-        : baseScore + sourceProjectBoost - repeatedProjectPenalty;
+        ? baseScore + tagBoost + sourceProjectBoost - repeatedProjectPenalty + 12
+        : baseScore + tagBoost + sourceProjectBoost - repeatedProjectPenalty;
     }
 
-    return baseScore + sourceProjectBoost - repeatedProjectPenalty;
+    return baseScore + tagBoost + sourceProjectBoost - repeatedProjectPenalty;
   }
 
   retrieve(question, context, limit = 6) {

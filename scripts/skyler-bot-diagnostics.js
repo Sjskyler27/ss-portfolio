@@ -96,12 +96,13 @@ async function main() {
         'content-type': 'application/json',
         'x-nf-client-connection-ip': 'cli-local',
       },
-      body: JSON.stringify({
-        question: options.question,
-        source,
-        disableDiscordWebhook: true,
-      }),
-    });
+    body: JSON.stringify({
+      question: options.question,
+      source,
+      includePrivateDiagnostics: true,
+      disableDiscordWebhook: true,
+    }),
+  });
   } finally {
     console.log = originalLog;
     console.warn = originalWarn;

@@ -64,6 +64,116 @@
             <time :datetime="message.createdAt">
               {{ formatMessageTime(message.createdAt) }}
             </time>
+            <details
+              v-if="message.diagnostics"
+              class="skyler-bot-diagnostics"
+            >
+              <summary>Diagnostics</summary>
+              <div class="skyler-bot-diagnostics-grid">
+                <section>
+                  <h4>Request</h4>
+                  <dl>
+                    <div>
+                      <dt>ID</dt>
+                      <dd>{{ message.diagnostics.requestId }}</dd>
+                    </div>
+                    <div>
+                      <dt>Source</dt>
+                      <dd>{{ message.diagnostics.request?.source || 'none' }}</dd>
+                    </div>
+                    <div>
+                      <dt>Tailoring</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.retrieval?.sourceTailoringEnabled
+                            ? 'on'
+                            : 'off'
+                        }}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section>
+                  <h4>Knowledge</h4>
+                  <dl>
+                    <div>
+                      <dt>Chunks</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.knowledge?.knowledgeStats
+                            ?.totalChunks || 0
+                        }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Info</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.knowledge?.knowledgeStats
+                            ?.byType?.info || 0
+                        }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Profile</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.knowledge?.files
+                            ?.encryptedKnowledge?.readMode || 'unknown'
+                        }}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section>
+                  <h4>Memory</h4>
+                  <pre>{{ formatDiagnosticsJson(message.diagnostics.memory) }}</pre>
+                </section>
+
+                <section>
+                  <h4>Tokens</h4>
+                  <pre>{{
+                    formatDiagnosticsJson(
+                      message.diagnostics.retrieval?.queryTokens || [],
+                    )
+                  }}</pre>
+                </section>
+
+                <section>
+                  <h4>Matches</h4>
+                  <ol>
+                    <li
+                      v-for="match in getDiagnosticsMatches(message.diagnostics)"
+                      :key="`${message.id}-${match.type}-${match.title}-${match.score}`"
+                    >
+                      <strong>{{ match.type }}: {{ match.title }}</strong>
+                      <span>
+                        score {{ match.score }} · {{ match.sourceUrl || 'no link' }}
+                      </span>
+                      <p>{{ match.evidencePreview }}</p>
+                    </li>
+                  </ol>
+                </section>
+
+                <section>
+                  <h4>Links</h4>
+                  <ol v-if="message.diagnostics.answer?.links?.length">
+                    <li
+                      v-for="link in message.diagnostics.answer.links"
+                      :key="`${message.id}-${link.href}-${link.text}`"
+                      :class="{ issue: link.issue }"
+                    >
+                      <strong>{{ link.text }}</strong>
+                      <span>{{ link.href }}</span>
+                      <em v-if="link.issue">{{ link.issue }}</em>
+                    </li>
+                  </ol>
+                  <p v-else>No links.</p>
+                </section>
+              </div>
+            </details>
           </article>
 
           <article
@@ -186,6 +296,9 @@ const storageKey = 'skyler-bot-chat-history';
 const introPromptStorageKey = 'skyler-bot-intro-seen';
 const disableDiscordWebhookKey = 'disable_discord_webhook';
 const rateLimitKey = 'skyler-bot-rate-history';
+const enableBotDiagnostics =
+  process.env.VUE_APP_SKYLER_BOT_DEBUG === 'true';
+const botDiagnosticsToken = process.env.VUE_APP_SKYLER_BOT_DEBUG_TOKEN || '';
 const maxQuestionLength = 250;
 const allowedQuestionPattern = /^[A-Za-z0-9 .,?!'"/&():-]*$/;
 const disallowedQuestionChars = /[^A-Za-z0-9 .,?!'"/&():-]/g;
@@ -235,6 +348,13 @@ function createMessage(role, text) {
     role,
     text,
     createdAt: new Date().toISOString(),
+  };
+}
+
+function createBotMessage(text, diagnostics = null) {
+  return {
+    ...createMessage('bot', text),
+    ...(diagnostics ? { diagnostics } : {}),
   };
 }
 
@@ -518,6 +638,7 @@ export default {
       const conversationContext = this.getConversationContext();
       const recentProjectIds = this.getRecentProjectIds();
       const recentProjectCounts = this.getRecentProjectCounts();
+      const includePrivateDiagnostics = this.shouldRequestDiagnostics();
       this.messages.push(createMessage('user', question));
 
       if (dailyMessageCount === dailyWarningThreshold) {
@@ -538,12 +659,21 @@ export default {
         const startedAt = performance.now();
         const response = await fetch('/.netlify/functions/skyler-bot', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(includePrivateDiagnostics && botDiagnosticsToken
+              ? { 'x-skyler-bot-debug-token': botDiagnosticsToken }
+              : {}),
+          },
           body: JSON.stringify({
             question,
             conversationContext,
             recentProjectIds,
             recentProjectCounts,
+            includePrivateDiagnostics,
+            ...(includePrivateDiagnostics && botDiagnosticsToken
+              ? { debugToken: botDiagnosticsToken }
+              : {}),
             source: getCurrentSource(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
@@ -558,25 +688,26 @@ export default {
           status: response.status,
           elapsedMs,
           debug: payload.debug,
+          privateDiagnostics: Boolean(payload.privateDiagnostics),
         });
 
         if (!response.ok) {
           this.messages.push(
-            createMessage(
-              'bot',
+            createBotMessage(
               payload.answer ||
                 payload.error ||
                 "That question cannot be answered by Skyler Bot. Try asking about Skyler's work, projects, skills, or education.",
+              payload.privateDiagnostics || null,
             ),
           );
           return;
         }
 
         this.messages.push(
-          createMessage(
-            'bot',
+          createBotMessage(
             payload.answer ||
               'I could not find a good answer in the portfolio context yet.',
+            payload.privateDiagnostics || null,
           ),
         );
       } catch (error) {
@@ -585,8 +716,7 @@ export default {
           questionLength: question.length,
         });
         this.messages.push(
-          createMessage(
-            'bot',
+          createBotMessage(
             'I could not reach the portfolio knowledge base. Please try again in a moment.',
           ),
         );
@@ -616,6 +746,9 @@ export default {
             role: message.role,
             text: message.text,
             createdAt: message.createdAt || new Date().toISOString(),
+            ...(enableBotDiagnostics && message.diagnostics
+              ? { diagnostics: message.diagnostics }
+              : {}),
           }));
 
         return validMessages.length
@@ -629,7 +762,12 @@ export default {
       }
     },
     saveMessages() {
-      setStoredValue(storageKey, JSON.stringify(this.messages.slice(-40)));
+      const messages = this.messages.slice(-40).map((message) => ({
+        ...message,
+        ...(enableBotDiagnostics ? {} : { diagnostics: undefined }),
+      }));
+
+      setStoredValue(storageKey, JSON.stringify(messages));
     },
     getConversationContext() {
       return this.messages
@@ -710,6 +848,15 @@ export default {
     },
     isDiscordWebhookDisabled() {
       return Boolean(getStoredValue(disableDiscordWebhookKey));
+    },
+    shouldRequestDiagnostics() {
+      return enableBotDiagnostics;
+    },
+    formatDiagnosticsJson(value) {
+      return JSON.stringify(value || null, null, 2);
+    },
+    getDiagnosticsMatches(diagnostics) {
+      return (diagnostics?.retrieval?.matches || []).slice(0, 8);
     },
     formatMessageTime(value) {
       const date = new Date(value);
@@ -1115,6 +1262,113 @@ export default {
   color: #7b7683;
   font-size: 11px;
   line-height: 1;
+}
+
+.skyler-bot-diagnostics {
+  margin-top: 9px;
+  border-top: 1px solid rgba(38, 113, 111, 0.16);
+  padding-top: 8px;
+  font-size: 11px;
+}
+
+.skyler-bot-diagnostics summary {
+  color: #124a80;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.skyler-bot-diagnostics section {
+  min-width: 0;
+}
+
+.skyler-bot-diagnostics h4 {
+  margin: 0 0 5px;
+  color: #124a80;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics dl {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+}
+
+.skyler-bot-diagnostics dl div {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 6px;
+}
+
+.skyler-bot-diagnostics dt {
+  color: #6b6474;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.skyler-bot-diagnostics pre {
+  max-height: 150px;
+  overflow: auto;
+  border: 1px solid rgba(38, 113, 111, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 250, 244, 0.74);
+  color: #213136;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.35;
+  margin: 0;
+  padding: 7px;
+  white-space: pre-wrap;
+}
+
+.skyler-bot-diagnostics ol {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 17px;
+}
+
+.skyler-bot-diagnostics li {
+  min-width: 0;
+}
+
+.skyler-bot-diagnostics li strong,
+.skyler-bot-diagnostics li span,
+.skyler-bot-diagnostics li em {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.skyler-bot-diagnostics li span {
+  color: #6b6474;
+}
+
+.skyler-bot-diagnostics li em {
+  color: #a3442f;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics li.issue {
+  color: #a3442f;
+}
+
+.skyler-bot-diagnostics p {
+  margin: 2px 0 0;
+  color: #4f5f63;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .skyler-bot-message.bot {

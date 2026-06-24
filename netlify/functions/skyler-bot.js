@@ -924,6 +924,12 @@ function normalizeAnswerLinks(answer) {
   return String(answer || '').replace(/\]\(\s+(\/[^)\s]+)\)/g, ']($1)');
 }
 
+function normalizeAnswerMarkdown(answer) {
+  return String(answer || '')
+    .replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1');
+}
+
 function isPrivateDiagnosticsLogEnabled() {
   return (
     process.env.SKYLER_BOT_PRIVATE_DEBUG === 'true' ||
@@ -948,6 +954,10 @@ function getHeaderValue(event, headerName) {
 }
 
 function isPrivateDiagnosticsResponseAllowed(event, payload = {}) {
+  if (!payload.includePrivateDiagnostics) {
+    return false;
+  }
+
   if (
     process.env.SKYLER_BOT_PRIVATE_DEBUG_RESPONSE !== 'true' &&
     process.env.SKYLER_BOT_DEBUG_RESPONSE !== 'private'
@@ -1644,7 +1654,9 @@ exports.handler = async (event) => {
       recentProjectCounts,
     );
     result.answer = removeFollowUpOffers(
-      sanitizeAnswerLinkLabels(normalizeAnswerLinks(result.answer)),
+      sanitizeAnswerLinkLabels(
+        normalizeAnswerMarkdown(normalizeAnswerLinks(result.answer)),
+      ),
     );
     const privateDiagnostics = buildPrivateDiagnostics({
       requestId,
