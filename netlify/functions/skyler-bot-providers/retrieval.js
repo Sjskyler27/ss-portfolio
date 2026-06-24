@@ -201,21 +201,33 @@ class RetrievalProvider {
       ? sourceProfile.sortOverride.indexOf(chunk.id)
       : -1;
     const sourceProjectBoost =
-      sourceProjectIndex >= 0 ? Math.max(2, 8 - sourceProjectIndex) : 0;
+      sourceProjectIndex >= 0 ? Math.max(12, 72 - sourceProjectIndex * 8) : 0;
+    const recentProjectMentions = new Set(context.repeatPenaltyProjectIds || []);
+    const sourceUrl = String(chunk.sourceUrl || "").toLowerCase();
+    const isRepeatedProjectEvidence =
+      chunk.type === "project" && recentProjectMentions.has(chunk.id);
+    const isRepeatedProjectLinkedEvidence = [...recentProjectMentions].some(
+      (projectId) =>
+        sourceUrl.includes(`/projects/${encodeURIComponent(projectId).toLowerCase()}`)
+    );
+    const repeatedProjectPenalty =
+      isRepeatedProjectEvidence || isRepeatedProjectLinkedEvidence ? 72 : 0;
     const sourceText = `${chunk.title || ""} ${chunk.sourceLabel || ""}`.toLowerCase();
 
     if (/\beducation|school|degree|bachelor\b/i.test(queryTokens.join(" "))) {
       return /\beducation\b/.test(sourceText)
-        ? baseScore + sourceProjectBoost + 12
-        : baseScore + sourceProjectBoost;
+        ? baseScore + sourceProjectBoost - repeatedProjectPenalty + 12
+        : baseScore + sourceProjectBoost - repeatedProjectPenalty;
     }
 
-    return baseScore + sourceProjectBoost;
+    return baseScore + sourceProjectBoost - repeatedProjectPenalty;
   }
 
   retrieve(question, context, limit = 6) {
     const queryTokens = this.buildQueryTokens(question, context);
-    const scoringTokens = [...new Set(queryTokens)];
+    const scoringTokens = [
+      ...new Set([...queryTokens, ...this.buildSourceTokens(context)]),
+    ];
     const knowledge = context.buildKnowledge();
     const allScored = knowledge
       .map((chunk) => ({

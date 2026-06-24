@@ -84,6 +84,7 @@ class GeminiProvider {
                         question,
                         retrievalResult.answer,
                         context.conversationContext,
+                        context.repeatPenaltyProjectTitles,
                       ),
                     ].join('\n'),
                   },

@@ -492,7 +492,11 @@ export default {
       ].sort((a, b) => a.localeCompare(b));
     },
     getFavoriteProjectIndex(project) {
-      return this.projects.findIndex(({ id }) => id === project.id);
+      const favoriteOffset = project.favorite ? 0 : this.projects.length;
+
+      return (
+        favoriteOffset + this.projects.findIndex(({ id }) => id === project.id)
+      );
     },
     getRelevantProjectIndex(project) {
       const index = this.sourceProjectOrder.indexOf(project.id);

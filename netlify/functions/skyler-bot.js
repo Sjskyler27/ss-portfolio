@@ -616,10 +616,17 @@ function createProjectChunks(projects) {
     title: project.title,
     sourceLabel: `Project: ${project.title}`,
     sourceUrl: `/projects/${encodeURIComponent(project.id)}`,
-    tags: [project.type, ...(project.tech || [])],
+    tags: [
+      project.type,
+      project.favorite ? 'Skyler favorite project' : '',
+      ...(project.tech || []),
+    ].filter(Boolean),
     text: removeSensitiveSentences(
       [
         project.title,
+        project.favorite
+          ? 'Skyler favorite project and strongest personal showcase.'
+          : '',
         project.type,
         project.summary,
         project.impact,
@@ -883,6 +890,69 @@ function removeFollowUpOffers(answer) {
   return cleanAnswer || String(answer || '').trim();
 }
 
+function getRecentProjectMentions(conversationContext) {
+  const contextText = normalizeText(conversationContext).toLowerCase();
+
+  if (!contextText) {
+    return [];
+  }
+
+  return buildKnowledge()
+    .filter((chunk) => chunk.type === 'project' && chunk.id)
+    .filter((project) => {
+      const title = String(project.title || '').toLowerCase();
+      const route = `/projects/${encodeURIComponent(project.id)}`.toLowerCase();
+
+      return contextText.includes(route) || (title && contextText.includes(title));
+    })
+    .map((project) => project.id);
+}
+
+function sanitizeRecentProjectIds(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const validProjectIds = new Set(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => project.id),
+  );
+
+  return [
+    ...new Set(
+      value
+        .map((id) => String(id || '').trim())
+        .filter((id) => /^[A-Za-z0-9_-]+$/.test(id) && validProjectIds.has(id)),
+    ),
+  ].slice(-6);
+}
+
+function getRecentProjectIds(conversationContext, explicitProjectIds = []) {
+  return [
+    ...new Set([
+      ...explicitProjectIds,
+      ...getRecentProjectMentions(conversationContext),
+    ]),
+  ];
+}
+
+function getRepeatPenaltyProjectIds(question, explicitProjectIds = []) {
+  return isLikelyFollowUpQuestion(question) ? [] : explicitProjectIds;
+}
+
+function getProjectTitlesById(projectIds = []) {
+  const projectsById = new Map(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => [project.id, project.title]),
+  );
+
+  return projectIds
+    .map((projectId) => projectsById.get(projectId))
+    .filter(Boolean);
+}
+
 function isLikelyFollowUpQuestion(question) {
   const cleanQuestion = normalizeText(question).toLowerCase();
   const wordCount = cleanQuestion.split(/\s+/).filter(Boolean).length;
@@ -913,7 +983,7 @@ function isLikelyFollowUpQuestion(question) {
 
   return (
     wordCount <= 5 &&
-    /\b(he|his|him|that|this|it|those|they|them|there)\b/.test(cleanQuestion)
+    /\b(that|this|it|those|they|them|there)\b/.test(cleanQuestion)
   );
 }
 
@@ -981,6 +1051,7 @@ function answerQuestion(
   sourceKey,
   conversationContext = '',
   isFollowUpQuestion = false,
+  explicitRecentProjectIds = [],
 ) {
   if (isOffTopicPastedContent(question)) {
     debugLog(requestId, 'off_topic_block', {
@@ -1068,10 +1139,22 @@ function answerQuestion(
 
   const sourceProfile = getSourceProfile(sourceKey);
   const provider = getSkylerBotProvider();
+  const recentProjectMentions = getRecentProjectIds(
+    conversationContext,
+    explicitRecentProjectIds,
+  );
+  const repeatPenaltyProjectIds = getRepeatPenaltyProjectIds(
+    question,
+    recentProjectMentions,
+  );
+  const repeatPenaltyProjectTitles = getProjectTitlesById(repeatPenaltyProjectIds);
   debugLog(requestId, 'provider_selected', {
     provider: provider.name,
     source: sourceKey || '',
     hasSourceProfile: Boolean(sourceProfile),
+    recentProjectMentions,
+    repeatPenaltyProjectIds,
+    repeatPenaltyProjectTitles,
   });
 
   return provider.answerQuestion(question, {
@@ -1080,6 +1163,9 @@ function answerQuestion(
     sourceProfile,
     conversationContext,
     isFollowUpQuestion,
+    recentProjectMentions,
+    repeatPenaltyProjectIds,
+    repeatPenaltyProjectTitles,
     buildKnowledge,
     getKnowledgeStats,
     log: (stage, details = {}) => debugLog(requestId, stage, details),
@@ -1128,6 +1214,7 @@ exports.handler = async (event) => {
   const conversationContext = sanitizeConversationContext(
     payload.conversationContext,
   );
+  const recentProjectIds = sanitizeRecentProjectIds(payload.recentProjectIds);
   const isFollowUpQuestion = isLikelyFollowUpQuestion(question);
   const source = normalizeSourceKey(payload.source);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
@@ -1136,6 +1223,7 @@ exports.handler = async (event) => {
     questionLength: question.length,
     questionPreview: previewText(question),
     conversationContextLength: conversationContext.length,
+    recentProjectIds,
     isFollowUpQuestion,
     source,
     disableDiscordWebhook,
@@ -1188,6 +1276,7 @@ exports.handler = async (event) => {
       source,
       conversationContext,
       isFollowUpQuestion,
+      recentProjectIds,
     );
     result.answer = removeFollowUpOffers(result.answer);
     await notifyDiscordChat(question, result, requestId, {

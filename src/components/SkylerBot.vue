@@ -189,6 +189,7 @@ const rateLimitKey = 'skyler-bot-rate-history';
 const maxQuestionLength = 250;
 const allowedQuestionPattern = /^[A-Za-z0-9 .,?!'"/&():-]*$/;
 const disallowedQuestionChars = /[^A-Za-z0-9 .,?!'"/&():-]/g;
+const projectLinkPattern = /\/projects\/([A-Za-z0-9_-]+)/g;
 // Map smart punctuation (mobile auto-insert) to ASCII so it is kept, not stripped.
 const smartPunctuationReplacements = [
   [/[‘’‚‛]/g, "'"],
@@ -249,6 +250,21 @@ function cleanConversationContextText(value) {
   return `${cleanText.slice(0, 130).trim()} ... ${cleanText
     .slice(-120)
     .trim()}`;
+}
+
+function getProjectIdsFromText(value) {
+  const ids = new Set();
+  const text = String(value || '');
+
+  projectLinkPattern.lastIndex = 0;
+  let match = projectLinkPattern.exec(text);
+
+  while (match) {
+    ids.add(decodeURIComponent(match[1]));
+    match = projectLinkPattern.exec(text);
+  }
+
+  return [...ids];
 }
 
 function isSafeMessageHref(href) {
@@ -489,6 +505,7 @@ export default {
 
       const dailyMessageCount = this.recordClientRateHit();
       const conversationContext = this.getConversationContext();
+      const recentProjectIds = this.getRecentProjectIds();
       this.messages.push(createMessage('user', question));
 
       if (dailyMessageCount === dailyWarningThreshold) {
@@ -513,6 +530,7 @@ export default {
           body: JSON.stringify({
             question,
             conversationContext,
+            recentProjectIds,
             source: getCurrentSource(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
@@ -615,6 +633,15 @@ export default {
           text: cleanConversationContextText(message.text),
         }))
         .filter((message) => message.text);
+    },
+    getRecentProjectIds() {
+      return [
+        ...new Set(
+          this.messages
+            .slice(-maxConversationContextMessages)
+            .flatMap((message) => getProjectIdsFromText(message.text)),
+        ),
+      ].slice(-6);
     },
     sanitizeDraft() {
       const nextDraft = normalizeSmartPunctuation(this.draft)
