@@ -486,7 +486,22 @@ function loadSourceProfiles() {
     return cachedSourceProfiles;
   }
 
-  const sourceInfoText = readSourceInfoText();
+  let sourceInfoText = '';
+
+  try {
+    sourceInfoText = readSourceInfoText();
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        scope: 'skyler-bot',
+        stage: 'source_profiles_unavailable',
+        errorName: error.name,
+        errorMessage: error.message,
+      }),
+    );
+    cachedSourceProfiles = [];
+    return cachedSourceProfiles;
+  }
 
   if (!sourceInfoText) {
     cachedSourceProfiles = [];
@@ -730,6 +745,20 @@ function buildKnowledge() {
           'Full-stack developer focused on product workflows, AI-assisted development, and building software people actually use.',
           'Works across frontend systems, backend services, mobile apps, deployment tooling, Vue, Flutter, React, Node, and modern AI-assisted engineering workflows.',
           'Work centers around onboarding, credentialing, admin tooling, automations, internal workflows, and maintainable products with clean user experiences.',
+        ].join(' '),
+      ),
+    },
+    {
+      type: 'overview',
+      title: 'Working style and culture fit',
+      sourceLabel: 'Portfolio overview',
+      sourceUrl: '/experience',
+      tags: ['culture', 'team', 'collaboration', 'communication', 'ownership'],
+      text: normalizeText(
+        [
+          'Skyler fits teams that value practical ownership, steady learning, product-minded engineering, and clear communication.',
+          'He works well in small-team and startup-style environments where engineers move across frontend, backend, integrations, debugging, and user workflows.',
+          'His project history shows collaboration with clients, product needs, design systems, reusable UI, admin tooling, and real workflow improvements rather than isolated code tasks.',
         ].join(' '),
       ),
     },

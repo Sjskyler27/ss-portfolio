@@ -40,6 +40,21 @@ class RetrievalProvider {
       aliases.push("strengths", "frontend", "vue", "full-stack", "product");
     }
 
+    if (/\b(culture|fit|team|collaborat|communication|working style|work style|values|startup|ownership|pace|autonomy)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "culture",
+        "fit",
+        "team",
+        "collaboration",
+        "communication",
+        "ownership",
+        "startup",
+        "product",
+        "debugging",
+        "workflows"
+      );
+    }
+
     if (/\b(latest|newest|recent|most recent)\b/.test(lowerQuestion)) {
       aliases.push("everee", "rust", "payroll", "integration");
     }
