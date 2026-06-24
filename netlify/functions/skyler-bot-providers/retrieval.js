@@ -341,11 +341,15 @@ class RetrievalProvider {
         queryTokens,
         matchCount: matches.length,
         matches: matches.map((match) => ({
+          id: match.id || "",
           title: match.title,
           type: match.type,
           source: match.sourceLabel || match.title,
           sourceUrl: match.sourceUrl || "",
+          internalSource: match.internalSource || "",
           score: match.score,
+          evidencePreview: context.trimToSentence(match.text, 360),
+          tags: match.tags || [],
         })),
         // Best-scoring chunks even when nothing cleared the threshold — shown
         // in logs so a zero-match question is diagnosable at a glance.

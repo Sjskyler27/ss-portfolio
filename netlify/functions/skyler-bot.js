@@ -227,6 +227,20 @@ function debugLog(requestId, stage, details = {}) {
   );
 }
 
+function privateDiagnosticsLog(requestId, diagnostics) {
+  console.log(
+    JSON.stringify(
+      {
+        scope: 'skyler-bot-private-diagnostics',
+        requestId,
+        ...diagnostics,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 function cleanDiscordValue(value, maxLength = 900) {
   if (typeof value !== 'string') {
     return '';
@@ -393,6 +407,22 @@ function findRepoFile(relativePath) {
   ];
 
   return candidates.find((candidate) => fs.existsSync(candidate));
+}
+
+function getRepoFileStatus(relativePath, encryptedEnvName = '') {
+  const plainPath = findRepoFile(relativePath);
+  const encryptedPath = findRepoFile(`${relativePath}.enc`);
+
+  return {
+    relativePath,
+    plainFound: Boolean(plainPath),
+    encryptedFound: Boolean(encryptedPath),
+    readMode: plainPath ? 'plain' : encryptedPath ? 'encrypted' : 'missing',
+    encryptedEnvName,
+    decryptKeyConfigured: encryptedEnvName
+      ? Boolean(process.env[encryptedEnvName])
+      : false,
+  };
 }
 
 function readTextFile(relativePath) {
@@ -894,6 +924,249 @@ function normalizeAnswerLinks(answer) {
   return String(answer || '').replace(/\]\(\s+(\/[^)\s]+)\)/g, ']($1)');
 }
 
+function isPrivateDiagnosticsLogEnabled() {
+  return (
+    process.env.SKYLER_BOT_PRIVATE_DEBUG === 'true' ||
+    process.env.SKYLER_BOT_PRIVATE_DEBUG_LOGS === 'true'
+  );
+}
+
+function isLocalDebugOrigin(event) {
+  const origin = getRequestOrigin(event);
+
+  return !origin || localAllowedOrigins.includes(origin);
+}
+
+function getHeaderValue(event, headerName) {
+  const headers = event.headers || {};
+  const lowerHeaderName = headerName.toLowerCase();
+  const matchingHeaderName = Object.keys(headers).find(
+    (name) => name.toLowerCase() === lowerHeaderName,
+  );
+
+  return matchingHeaderName ? headers[matchingHeaderName] : '';
+}
+
+function isPrivateDiagnosticsResponseAllowed(event, payload = {}) {
+  if (
+    process.env.SKYLER_BOT_PRIVATE_DEBUG_RESPONSE !== 'true' &&
+    process.env.SKYLER_BOT_DEBUG_RESPONSE !== 'private'
+  ) {
+    return false;
+  }
+
+  const configuredToken = process.env.SKYLER_BOT_PRIVATE_DEBUG_TOKEN || '';
+
+  if (configuredToken) {
+    const providedToken =
+      getHeaderValue(event, 'x-skyler-bot-debug-token') ||
+      payload.debugToken ||
+      '';
+
+    return providedToken === configuredToken;
+  }
+
+  return isLocalDebugOrigin(event);
+}
+
+function getKnownAnswerLinkTargets() {
+  const projects = loadExportedArray('src/data/projects.js', 'projects')
+    .filter((project) => !project.notReady)
+    .map((project) => ({
+      type: 'project',
+      href: `/projects/${encodeURIComponent(project.id)}`,
+      label: project.title,
+      aliases: [project.title, `Project: ${project.title}`],
+    }));
+  const experienceItems = loadExportedArray(
+    'src/data/experience.js',
+    'experienceItems',
+  );
+  const experienceLabels = [
+    'experience',
+    'portfolio overview',
+    'his portfolio overview',
+    'working style and culture fit',
+    ...experienceItems.flatMap((item) => [
+      item.organization,
+      `${item.organization} experience`,
+      `Experience: ${item.organization}`,
+    ]),
+  ];
+
+  return [
+    ...projects,
+    {
+      type: 'experience',
+      href: '/experience',
+      label: 'Experience',
+      aliases: experienceLabels,
+    },
+    {
+      type: 'home',
+      href: '/',
+      label: 'Portfolio overview',
+      aliases: ['Portfolio overview', 'portfolio'],
+    },
+  ];
+}
+
+function extractAnswerLinks(answer) {
+  const links = [];
+  const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let match = linkPattern.exec(answer || '');
+
+  while (match) {
+    links.push({
+      text: normalizeText(match[1]),
+      href: String(match[2] || '').trim(),
+    });
+    match = linkPattern.exec(answer || '');
+  }
+
+  return links;
+}
+
+function analyzeAnswerLinks(answer) {
+  const knownTargets = getKnownAnswerLinkTargets();
+
+  return extractAnswerLinks(answer).map((link) => {
+    const target = knownTargets.find((candidate) => candidate.href === link.href);
+    const normalizedLinkText = link.text.toLowerCase();
+    const allowedAnchorText = target
+      ? target.aliases.some(
+          (alias) => normalizeText(alias).toLowerCase() === normalizedLinkText,
+        )
+      : false;
+
+    return {
+      ...link,
+      targetType: target?.type || 'unknown',
+      expectedLabel: target?.label || '',
+      allowedAnchorText,
+      issue:
+        target && !allowedAnchorText
+          ? 'anchor_text_is_not_a_known_project_or_experience_label'
+          : !target && link.href.startsWith('/')
+            ? 'unknown_internal_link_target'
+            : '',
+    };
+  });
+}
+
+function getKnowledgeSourceDiagnostics() {
+  const knowledgeStatus = getRepoFileStatus(
+    'documents/skyler-bot-profile.md',
+    'BOT_INFO_KEY',
+  );
+  const sourceProfileStatus = getRepoFileStatus(
+    'documents/source-info.private.json',
+    'SOURCE_INFO_KEY',
+  );
+  const publicSourceStatus = getRepoFileStatus('src/data/source-info.json');
+
+  return {
+    files: {
+      publicSources: publicSourceStatus,
+      encryptedKnowledge: knowledgeStatus,
+      sourceProfiles: sourceProfileStatus,
+    },
+    knowledgeStats: getKnowledgeStats(),
+    internalKnowledgeChunks: buildKnowledge()
+      .filter((chunk) => chunk.internalSource)
+      .reduce((stats, chunk) => {
+        stats[chunk.internalSource] = (stats[chunk.internalSource] || 0) + 1;
+        return stats;
+      }, {}),
+  };
+}
+
+function summarizeSourceProfile(sourceProfile) {
+  if (!sourceProfile) {
+    return null;
+  }
+
+  return {
+    id: sourceProfile.id || '',
+    key: sourceProfile.key || '',
+    label: sourceProfile.label || '',
+    role: sourceProfile.role || '',
+    targetSkills: sourceProfile.targetSkills || [],
+    responsibilities: sourceProfile.responsibilities || [],
+    sortOverride: sourceProfile.sortOverride || [],
+    answerGuidance: sourceProfile.answerGuidance || [],
+    companySummary: sourceProfile.companySummary || '',
+    cultureSummary: sourceProfile.cultureSummary || '',
+    jobSummary: sourceProfile.jobSummary || '',
+    jobDescriptionPreview: previewText(sourceProfile.jobDescription || '', 600),
+  };
+}
+
+function buildPrivateDiagnostics({
+  requestId,
+  question,
+  source,
+  sourceProfile,
+  conversationContext,
+  recentProjectIds,
+  recentProjectCounts,
+  isFollowUpQuestion,
+  result,
+}) {
+  return {
+    stage: 'private_diagnostics',
+    request: {
+      question,
+      source,
+      isFollowUpQuestion,
+    },
+    knowledge: getKnowledgeSourceDiagnostics(),
+    sourceProfile: summarizeSourceProfile(sourceProfile),
+    memory: {
+      conversationContext,
+      recentProjectIds,
+      recentProjectCounts,
+      recentProjectUsage: getProjectUsageSummaries(recentProjectCounts),
+    },
+    retrieval: {
+      provider: result.debug?.provider || '',
+      model: result.debug?.model || '',
+      queryTokens: result.debug?.queryTokens || [],
+      knowledgeStats: result.debug?.knowledge || null,
+      topCandidates: result.debug?.topCandidates || [],
+      matches: result.debug?.matches || [],
+      fallbackReason: result.debug?.fallbackReason || '',
+    },
+    answer: {
+      text: result.answer || '',
+      links: analyzeAnswerLinks(result.answer || ''),
+      linkIssues: analyzeAnswerLinks(result.answer || '').filter(
+        (link) => link.issue,
+      ),
+    },
+    requestId,
+  };
+}
+
+function buildPublicDebugSummary(debug = {}) {
+  return {
+    provider: debug.provider || '',
+    model: debug.model || '',
+    queryTokenCount: debug.queryTokenCount || 0,
+    matchCount: debug.matchCount || 0,
+    fallbackReason: debug.fallbackReason || '',
+    matches: (debug.matches || []).map((match) => ({
+      title: match.title,
+      type: match.type,
+      source: match.source,
+      sourceUrl: match.sourceUrl,
+      score: match.score,
+    })),
+    topCandidates: debug.topCandidates || [],
+    knowledge: debug.knowledge || null,
+  };
+}
+
 function getRecentProjectMentions(conversationContext) {
   const contextText = normalizeText(conversationContext).toLowerCase();
 
@@ -1346,6 +1619,22 @@ exports.handler = async (event) => {
       recentProjectCounts,
     );
     result.answer = removeFollowUpOffers(normalizeAnswerLinks(result.answer));
+    const privateDiagnostics = buildPrivateDiagnostics({
+      requestId,
+      question,
+      source,
+      sourceProfile: getSourceProfile(source),
+      conversationContext,
+      recentProjectIds,
+      recentProjectCounts,
+      isFollowUpQuestion,
+      result,
+    });
+
+    if (isPrivateDiagnosticsLogEnabled()) {
+      privateDiagnosticsLog(requestId, privateDiagnostics);
+    }
+
     await notifyDiscordChat(question, result, requestId, {
       source,
       disableDiscordWebhook,
@@ -1370,7 +1659,11 @@ exports.handler = async (event) => {
     }
 
     if (process.env.SKYLER_BOT_DEBUG_RESPONSE === 'true') {
-      publicBody.debug = result.debug;
+      publicBody.debug = buildPublicDebugSummary(result.debug);
+    }
+
+    if (isPrivateDiagnosticsResponseAllowed(event, payload)) {
+      publicBody.privateDiagnostics = privateDiagnostics;
     }
 
     return {
