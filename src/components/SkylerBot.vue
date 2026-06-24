@@ -197,7 +197,7 @@ const suggestedQuestions = [
 const maxMessagesPerMinute = 10;
 const maxMessagesPerDay = 35;
 const maxConversationContextMessages = 6;
-const maxConversationContextTextLength = 180;
+const maxConversationContextTextLength = 260;
 const dailyWarningThreshold = Math.ceil(maxMessagesPerDay / 2);
 const minuteMs = 60 * 1000;
 const dayMs = 24 * 60 * 60 * 1000;
@@ -219,11 +219,18 @@ function createMessage(role, text) {
 }
 
 function cleanConversationContextText(value) {
-  return normalizeSmartPunctuation(String(value || ''))
+  const cleanText = normalizeSmartPunctuation(String(value || ''))
     .replace(disallowedQuestionChars, '')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxConversationContextTextLength);
+    .trim();
+
+  if (cleanText.length <= maxConversationContextTextLength) {
+    return cleanText;
+  }
+
+  return `${cleanText.slice(0, 130).trim()} ... ${cleanText
+    .slice(-120)
+    .trim()}`;
 }
 
 function isSafeMessageHref(href) {

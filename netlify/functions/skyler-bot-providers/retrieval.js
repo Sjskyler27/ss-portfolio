@@ -53,6 +53,20 @@ class RetrievalProvider {
       aliases.push("strengths", "frontend", "vue", "full-stack", "product");
     }
 
+    if (/\b(proud|proudest|most proud|favorite|favourite|best project|showcase)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "strongest",
+        "strengths",
+        "project",
+        "healthcare",
+        "stonecrest",
+        "full-stack",
+        "backend",
+        "frontend",
+        "product"
+      );
+    }
+
     if (/\b(culture|fit|team|collaborat|communication|working style|work style|values|startup|ownership|pace|autonomy)\b/.test(lowerQuestion)) {
       aliases.push(
         "culture",

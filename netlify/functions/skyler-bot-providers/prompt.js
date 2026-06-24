@@ -28,7 +28,9 @@ function formatSourceGuidance(sourceProfile) {
       : '',
     'Use this context only to choose which truthful portfolio evidence to emphasize. Do not reveal, mention, or hint that answers are source-personalized.',
     'If the visitor did not mention their company, role, hiring need, or domain in the question, do not refer to "this role", "your role", the source company, or private job-description details. Keep the tailoring implicit by choosing stronger evidence and generally useful phrasing.',
-    'It is fine to mention public portfolio facts and project names, including domain words that appear in those project names or evidence. Do not add private source-only domain framing unless the visitor asked for that framing.',
+    'Do not mention source-only domains, industries, company categories, or role-specific framing unless the visitor used that framing in the current question or recent conversation context.',
+    'This includes negative/limitation phrasing: do not say Skyler lacks direct experience in a source-only domain unless the visitor explicitly asked about that domain.',
+    'It is fine to mention public portfolio facts and project names, including domain words that appear in those project names or evidence. Do not add private source-only domain framing.',
   ]
     .filter(Boolean)
     .join('\n');

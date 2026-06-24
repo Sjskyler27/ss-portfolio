@@ -847,20 +847,40 @@ function sanitizeConversationContext(value) {
     return '';
   }
 
+  const compactContextText = (text) => {
+    if (text.length <= 260) {
+      return text;
+    }
+
+    return `${text.slice(0, 130).trim()} ... ${text.slice(-120).trim()}`;
+  };
+
   return value
     .slice(-6)
     .map((message) => {
       const role = message?.role === 'bot' ? 'Bot' : 'Visitor';
       const text = normalizeText(message?.text)
         .replace(/[^A-Za-z0-9 .,?!'"/&():-]/g, '')
-        .slice(0, 180)
         .trim();
 
-      return text ? `${role}: ${text}` : '';
+      return text ? `${role}: ${compactContextText(text)}` : '';
     })
     .filter(Boolean)
     .join('\n')
     .slice(0, 1200);
+}
+
+function removeFollowUpOffers(answer) {
+  let cleanAnswer = String(answer || '').trim();
+  const followUpParagraphPattern =
+    /(?:\n\s*){1,2}(?:if you (?:want|would like)|if you'd like|i can also|i can point|want me to|would you like|do you want)\b[\s\S]*$/i;
+  const followUpSentencePattern =
+    /\s+(?:if you (?:want|would like)|if you'd like|i can also|i can point|want me to|would you like|do you want)\b[^.!?]*(?:[.!?]|$)\s*$/i;
+
+  cleanAnswer = cleanAnswer.replace(followUpParagraphPattern, '').trim();
+  cleanAnswer = cleanAnswer.replace(followUpSentencePattern, '').trim();
+
+  return cleanAnswer || String(answer || '').trim();
 }
 
 function scoreChunk(chunk, queryTokens) {
@@ -1125,6 +1145,7 @@ exports.handler = async (event) => {
       source,
       conversationContext,
     );
+    result.answer = removeFollowUpOffers(result.answer);
     await notifyDiscordChat(question, result, requestId, {
       source,
       disableDiscordWebhook,
