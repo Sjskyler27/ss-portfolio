@@ -179,6 +179,25 @@ class RetrievalProvider {
     );
   }
 
+  shouldUseSourceTailoring(question) {
+    const lowerQuestion = String(question || "").toLowerCase();
+
+    if (
+      /\b(sharepoint|onedrive|microsoft graph|lawmatics|linux|php|powershell|bash|sql|backend|frontend|education|school|degree)\b/.test(
+        lowerQuestion
+      ) ||
+      /\b(experience with|type of .*experience|worked with|used|know|knows|direct experience)\b/.test(
+        lowerQuestion
+      )
+    ) {
+      return false;
+    }
+
+    return /\b(why|hire|hiring|candidate|fit|role|team|culture|summary|pitch|stand out|strengths?|background)\b/.test(
+      lowerQuestion
+    );
+  }
+
   dedupeMatches(matches) {
     const seen = new Set();
 
@@ -222,7 +241,9 @@ class RetrievalProvider {
       ? sourceProfile.sortOverride.indexOf(chunk.id)
       : -1;
     const sourceProjectBoost =
-      sourceProjectIndex >= 0 ? Math.max(10, 54 - sourceProjectIndex * 7) : 0;
+      context.sourceTailoringEnabled && sourceProjectIndex >= 0
+        ? Math.max(10, 54 - sourceProjectIndex * 7)
+        : 0;
     const recentProjectMentions = new Set(context.repeatPenaltyProjectIds || []);
     const recentProjectCounts = context.recentProjectCounts || {};
     const sourceUrl = String(chunk.sourceUrl || "").toLowerCase();
@@ -256,14 +277,22 @@ class RetrievalProvider {
 
   retrieve(question, context, limit = 6) {
     const queryTokens = this.buildQueryTokens(question, context);
+    const sourceTailoringEnabled = this.shouldUseSourceTailoring(question);
+    const scoringContext = {
+      ...context,
+      sourceTailoringEnabled,
+    };
     const scoringTokens = [
-      ...new Set([...queryTokens, ...this.buildSourceTokens(context)]),
+      ...new Set([
+        ...queryTokens,
+        ...(sourceTailoringEnabled ? this.buildSourceTokens(context) : []),
+      ]),
     ];
     const knowledge = context.buildKnowledge();
     const allScored = knowledge
       .map((chunk) => ({
         ...chunk,
-        score: this.scoreChunk(chunk, scoringTokens, context),
+        score: this.scoreChunk(chunk, scoringTokens, scoringContext),
       }))
       .sort((a, b) => b.score - a.score);
 
@@ -301,6 +330,7 @@ class RetrievalProvider {
 
     return {
       queryTokens,
+      sourceTailoringEnabled,
       matches,
       topCandidates,
       knowledgeStats: context.getKnowledgeStats(),
@@ -329,7 +359,13 @@ class RetrievalProvider {
   }
 
   getEvidence(question, context) {
-    const { queryTokens, matches, topCandidates, knowledgeStats } =
+    const {
+      queryTokens,
+      sourceTailoringEnabled,
+      matches,
+      topCandidates,
+      knowledgeStats,
+    } =
       this.retrieve(question, context);
 
     return {
@@ -339,6 +375,7 @@ class RetrievalProvider {
         privateInfoBlocked: false,
         queryTokenCount: queryTokens.length,
         queryTokens,
+        sourceTailoringEnabled,
         matchCount: matches.length,
         matches: matches.map((match) => ({
           id: match.id || "",
@@ -366,6 +403,7 @@ class RetrievalProvider {
       provider: this.name,
       queryTokenCount: evidenceResult.debug.queryTokenCount,
       queryTokens: evidenceResult.debug.queryTokens,
+      sourceTailoringEnabled: evidenceResult.debug.sourceTailoringEnabled,
       knowledge: evidenceResult.debug.knowledge,
       matches: evidenceResult.debug.matches,
       topCandidates: evidenceResult.debug.topCandidates,

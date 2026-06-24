@@ -55,6 +55,7 @@ class OpenAIProvider {
       provider: this.retrievalProvider.name,
       queryTokenCount: retrievalResult.debug.queryTokenCount,
       queryTokens: retrievalResult.debug.queryTokens,
+      sourceTailoringEnabled: retrievalResult.debug.sourceTailoringEnabled,
       knowledge: retrievalResult.debug.knowledge,
       matches: retrievalResult.debug.matches,
       topCandidates: retrievalResult.debug.topCandidates,
@@ -102,7 +103,11 @@ class OpenAIProvider {
         },
         body: JSON.stringify({
           model: this.model,
-          instructions: buildSkylerBotInstructions(context.sourceProfile),
+          instructions: buildSkylerBotInstructions(
+            retrievalResult.debug.sourceTailoringEnabled
+              ? context.sourceProfile
+              : null,
+          ),
           input: [
             {
               role: 'user',

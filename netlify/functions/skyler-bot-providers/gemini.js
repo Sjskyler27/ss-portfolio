@@ -25,6 +25,7 @@ class GeminiProvider {
       provider: this.retrievalProvider.name,
       queryTokenCount: retrievalResult.debug.queryTokenCount,
       queryTokens: retrievalResult.debug.queryTokens,
+      sourceTailoringEnabled: retrievalResult.debug.sourceTailoringEnabled,
       knowledge: retrievalResult.debug.knowledge,
       matches: retrievalResult.debug.matches,
       topCandidates: retrievalResult.debug.topCandidates,
@@ -78,7 +79,11 @@ class GeminiProvider {
                 parts: [
                   {
                     text: [
-                      buildSkylerBotInstructions(context.sourceProfile),
+                      buildSkylerBotInstructions(
+                        retrievalResult.debug.sourceTailoringEnabled
+                          ? context.sourceProfile
+                          : null,
+                      ),
                       '',
                       buildGroundingPrompt(
                         question,

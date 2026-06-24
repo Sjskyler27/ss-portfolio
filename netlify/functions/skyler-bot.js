@@ -1054,6 +1054,29 @@ function analyzeAnswerLinks(answer) {
   });
 }
 
+function sanitizeAnswerLinkLabels(answer) {
+  const knownTargets = getKnownAnswerLinkTargets();
+
+  return String(answer || '').replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (fullMatch, rawText, rawHref) => {
+      const href = String(rawHref || '').trim();
+      const target = knownTargets.find((candidate) => candidate.href === href);
+
+      if (!target) {
+        return href.startsWith('/') ? normalizeText(rawText) : fullMatch;
+      }
+
+      const normalizedText = normalizeText(rawText).toLowerCase();
+      const allowedAnchorText = target.aliases.some(
+        (alias) => normalizeText(alias).toLowerCase() === normalizedText,
+      );
+
+      return allowedAnchorText ? fullMatch : `[${target.label}](${href})`;
+    },
+  );
+}
+
 function getKnowledgeSourceDiagnostics() {
   const knowledgeStatus = getRepoFileStatus(
     'documents/skyler-bot-profile.md',
@@ -1132,6 +1155,7 @@ function buildPrivateDiagnostics({
       provider: result.debug?.provider || '',
       model: result.debug?.model || '',
       queryTokens: result.debug?.queryTokens || [],
+      sourceTailoringEnabled: Boolean(result.debug?.sourceTailoringEnabled),
       knowledgeStats: result.debug?.knowledge || null,
       topCandidates: result.debug?.topCandidates || [],
       matches: result.debug?.matches || [],
@@ -1153,6 +1177,7 @@ function buildPublicDebugSummary(debug = {}) {
     provider: debug.provider || '',
     model: debug.model || '',
     queryTokenCount: debug.queryTokenCount || 0,
+    sourceTailoringEnabled: Boolean(debug.sourceTailoringEnabled),
     matchCount: debug.matchCount || 0,
     fallbackReason: debug.fallbackReason || '',
     matches: (debug.matches || []).map((match) => ({
@@ -1618,7 +1643,9 @@ exports.handler = async (event) => {
       recentProjectIds,
       recentProjectCounts,
     );
-    result.answer = removeFollowUpOffers(normalizeAnswerLinks(result.answer));
+    result.answer = removeFollowUpOffers(
+      sanitizeAnswerLinkLabels(normalizeAnswerLinks(result.answer)),
+    );
     const privateDiagnostics = buildPrivateDiagnostics({
       requestId,
       question,

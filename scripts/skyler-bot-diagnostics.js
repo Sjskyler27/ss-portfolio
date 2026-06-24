@@ -153,7 +153,10 @@ async function main() {
   printJson(diagnostics.memory);
 
   printSection('Retrieval Tokens');
-  printJson(diagnostics.retrieval.queryTokens);
+  printJson({
+    sourceTailoringEnabled: diagnostics.retrieval.sourceTailoringEnabled,
+    queryTokens: diagnostics.retrieval.queryTokens,
+  });
 
   printSection('Retrieval Matches');
   printMatches(diagnostics.retrieval.matches);
