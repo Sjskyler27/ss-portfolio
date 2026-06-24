@@ -194,6 +194,27 @@ class RetrievalProvider {
     });
   }
 
+  getChunkProjectId(chunk) {
+    if (chunk.type === "project" && chunk.id) {
+      return chunk.id;
+    }
+
+    const sourceUrl = String(chunk.sourceUrl || "");
+    const match = sourceUrl.match(/\/projects\/([A-Za-z0-9_-]+)/);
+
+    return match ? decodeURIComponent(match[1]) : "";
+  }
+
+  isSourceProjectCapped(chunk, context) {
+    if (!context.sourceProfile) {
+      return false;
+    }
+
+    const projectId = this.getChunkProjectId(chunk);
+
+    return projectId && (context.recentProjectCounts || {})[projectId] >= 2;
+  }
+
   scoreChunk(chunk, queryTokens, context) {
     const baseScore = context.scoreChunk(chunk, queryTokens);
     const sourceProfile = context.sourceProfile || {};
@@ -201,17 +222,27 @@ class RetrievalProvider {
       ? sourceProfile.sortOverride.indexOf(chunk.id)
       : -1;
     const sourceProjectBoost =
-      sourceProjectIndex >= 0 ? Math.max(12, 72 - sourceProjectIndex * 8) : 0;
+      sourceProjectIndex >= 0 ? Math.max(10, 54 - sourceProjectIndex * 7) : 0;
     const recentProjectMentions = new Set(context.repeatPenaltyProjectIds || []);
+    const recentProjectCounts = context.recentProjectCounts || {};
     const sourceUrl = String(chunk.sourceUrl || "").toLowerCase();
     const isRepeatedProjectEvidence =
       chunk.type === "project" && recentProjectMentions.has(chunk.id);
-    const isRepeatedProjectLinkedEvidence = [...recentProjectMentions].some(
-      (projectId) =>
-        sourceUrl.includes(`/projects/${encodeURIComponent(projectId).toLowerCase()}`)
+    const repeatedLinkedProjectId = [...recentProjectMentions].find(
+      (projectId) => {
+        const route = `/projects/${encodeURIComponent(projectId).toLowerCase()}`;
+
+        return sourceUrl.includes(route);
+      }
     );
+    const repeatedProjectId = isRepeatedProjectEvidence
+      ? chunk.id
+      : repeatedLinkedProjectId;
+    const repeatedProjectCount = repeatedProjectId
+      ? recentProjectCounts[repeatedProjectId] || 1
+      : 0;
     const repeatedProjectPenalty =
-      isRepeatedProjectEvidence || isRepeatedProjectLinkedEvidence ? 72 : 0;
+      repeatedProjectCount >= 2 ? 132 : repeatedProjectCount === 1 ? 58 : 0;
     const sourceText = `${chunk.title || ""} ${chunk.sourceLabel || ""}`.toLowerCase();
 
     if (/\beducation|school|degree|bachelor\b/i.test(queryTokens.join(" "))) {
@@ -246,6 +277,7 @@ class RetrievalProvider {
 
     const scored = allScored
       .filter((chunk) => chunk.score >= 3)
+      .filter((chunk) => !this.isSourceProjectCapped(chunk, context))
       .sort(
         (a, b) =>
           b.score - a.score ||

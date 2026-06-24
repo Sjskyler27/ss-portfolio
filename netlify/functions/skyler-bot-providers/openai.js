@@ -115,6 +115,7 @@ class OpenAIProvider {
                       retrievalResult.answer,
                       context.conversationContext,
                       context.repeatPenaltyProjectTitles,
+                      context.recentProjectUsage,
                     ),
                   ].join('\n'),
                 },

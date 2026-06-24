@@ -97,7 +97,13 @@ function buildGroundingPrompt(
   evidence,
   conversationContext = '',
   repeatPenaltyProjectTitles = [],
+  recentProjectUsage = [],
 ) {
+  const usageGuidance = recentProjectUsage.length
+    ? `Recent project usage counts: ${recentProjectUsage
+        .map((project) => `${project.title} (${project.count})`)
+        .join(', ')}. Once a project has appeared twice, prefer explaining the capability pattern without linking or re-explaining that same project again. Use a repeated project only when the visitor directly asks about it or it is the only truthful evidence.\n`
+    : '';
   const repeatedProjectGuidance = repeatPenaltyProjectTitles.length
     ? `Projects already used recently: ${repeatPenaltyProjectTitles.join(', ')}. Avoid reusing, relinking, or re-explaining these projects unless the visitor directly asks about one of them or no other evidence can answer the question. Still make the answer persuasive by explaining the broader pattern and using fresher evidence when possible.\n`
     : '';
@@ -106,6 +112,7 @@ function buildGroundingPrompt(
     conversationContext
       ? `Recent conversation context for follow-up resolution:\n${conversationContext}\n`
       : '',
+    usageGuidance,
     repeatedProjectGuidance,
     `Question: ${question}`,
     '',

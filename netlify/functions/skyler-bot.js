@@ -890,6 +890,10 @@ function removeFollowUpOffers(answer) {
   return cleanAnswer || String(answer || '').trim();
 }
 
+function normalizeAnswerLinks(answer) {
+  return String(answer || '').replace(/\]\(\s+(\/[^)\s]+)\)/g, ']($1)');
+}
+
 function getRecentProjectMentions(conversationContext) {
   const contextText = normalizeText(conversationContext).toLowerCase();
 
@@ -928,6 +932,38 @@ function sanitizeRecentProjectIds(value) {
   ].slice(-6);
 }
 
+function getValidProjectIds() {
+  return new Set(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => project.id),
+  );
+}
+
+function sanitizeRecentProjectCounts(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  const validProjectIds = getValidProjectIds();
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([projectId, count]) => [
+        String(projectId || '').trim(),
+        Math.min(Math.max(Number.parseInt(count, 10) || 0, 0), 6),
+      ])
+      .filter(
+        ([projectId, count]) =>
+          /^[A-Za-z0-9_-]+$/.test(projectId) &&
+          validProjectIds.has(projectId) &&
+          count > 0,
+      )
+      .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
+      .slice(0, 8),
+  );
+}
+
 function getRecentProjectIds(conversationContext, explicitProjectIds = []) {
   return [
     ...new Set([
@@ -951,6 +987,22 @@ function getProjectTitlesById(projectIds = []) {
   return projectIds
     .map((projectId) => projectsById.get(projectId))
     .filter(Boolean);
+}
+
+function getProjectUsageSummaries(projectCounts = {}) {
+  const projectsById = new Map(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => [project.id, project.title]),
+  );
+
+  return Object.entries(projectCounts)
+    .map(([projectId, count]) => ({
+      id: projectId,
+      title: projectsById.get(projectId),
+      count,
+    }))
+    .filter((project) => project.title);
 }
 
 function isLikelyFollowUpQuestion(question) {
@@ -1052,6 +1104,7 @@ function answerQuestion(
   conversationContext = '',
   isFollowUpQuestion = false,
   explicitRecentProjectIds = [],
+  explicitRecentProjectCounts = {},
 ) {
   if (isOffTopicPastedContent(question)) {
     debugLog(requestId, 'off_topic_block', {
@@ -1143,18 +1196,25 @@ function answerQuestion(
     conversationContext,
     explicitRecentProjectIds,
   );
+  const recentProjectCounts = {
+    ...Object.fromEntries(recentProjectMentions.map((projectId) => [projectId, 1])),
+    ...explicitRecentProjectCounts,
+  };
   const repeatPenaltyProjectIds = getRepeatPenaltyProjectIds(
     question,
     recentProjectMentions,
   );
   const repeatPenaltyProjectTitles = getProjectTitlesById(repeatPenaltyProjectIds);
+  const recentProjectUsage = getProjectUsageSummaries(recentProjectCounts);
   debugLog(requestId, 'provider_selected', {
     provider: provider.name,
     source: sourceKey || '',
     hasSourceProfile: Boolean(sourceProfile),
     recentProjectMentions,
+    recentProjectCounts,
     repeatPenaltyProjectIds,
     repeatPenaltyProjectTitles,
+    recentProjectUsage,
   });
 
   return provider.answerQuestion(question, {
@@ -1164,6 +1224,8 @@ function answerQuestion(
     conversationContext,
     isFollowUpQuestion,
     recentProjectMentions,
+    recentProjectCounts,
+    recentProjectUsage,
     repeatPenaltyProjectIds,
     repeatPenaltyProjectTitles,
     buildKnowledge,
@@ -1215,6 +1277,9 @@ exports.handler = async (event) => {
     payload.conversationContext,
   );
   const recentProjectIds = sanitizeRecentProjectIds(payload.recentProjectIds);
+  const recentProjectCounts = sanitizeRecentProjectCounts(
+    payload.recentProjectCounts,
+  );
   const isFollowUpQuestion = isLikelyFollowUpQuestion(question);
   const source = normalizeSourceKey(payload.source);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
@@ -1224,6 +1289,7 @@ exports.handler = async (event) => {
     questionPreview: previewText(question),
     conversationContextLength: conversationContext.length,
     recentProjectIds,
+    recentProjectCounts,
     isFollowUpQuestion,
     source,
     disableDiscordWebhook,
@@ -1277,8 +1343,9 @@ exports.handler = async (event) => {
       conversationContext,
       isFollowUpQuestion,
       recentProjectIds,
+      recentProjectCounts,
     );
-    result.answer = removeFollowUpOffers(result.answer);
+    result.answer = removeFollowUpOffers(normalizeAnswerLinks(result.answer));
     await notifyDiscordChat(question, result, requestId, {
       source,
       disableDiscordWebhook,

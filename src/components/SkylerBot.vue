@@ -213,6 +213,7 @@ const suggestedQuestions = [
 const maxMessagesPerMinute = 10;
 const maxMessagesPerDay = 35;
 const maxConversationContextMessages = 6;
+const maxRecentProjectMemoryMessages = 20;
 const maxConversationContextTextLength = 260;
 const dailyWarningThreshold = Math.ceil(maxMessagesPerDay / 2);
 const minuteMs = 60 * 1000;
@@ -265,6 +266,16 @@ function getProjectIdsFromText(value) {
   }
 
   return [...ids];
+}
+
+function getProjectCountsFromMessages(messages) {
+  return messages.reduce((counts, message) => {
+    getProjectIdsFromText(message.text).forEach((projectId) => {
+      counts[projectId] = (counts[projectId] || 0) + 1;
+    });
+
+    return counts;
+  }, {});
 }
 
 function isSafeMessageHref(href) {
@@ -506,6 +517,7 @@ export default {
       const dailyMessageCount = this.recordClientRateHit();
       const conversationContext = this.getConversationContext();
       const recentProjectIds = this.getRecentProjectIds();
+      const recentProjectCounts = this.getRecentProjectCounts();
       this.messages.push(createMessage('user', question));
 
       if (dailyMessageCount === dailyWarningThreshold) {
@@ -531,6 +543,7 @@ export default {
             question,
             conversationContext,
             recentProjectIds,
+            recentProjectCounts,
             source: getCurrentSource(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
@@ -635,13 +648,18 @@ export default {
         .filter((message) => message.text);
     },
     getRecentProjectIds() {
-      return [
-        ...new Set(
-          this.messages
-            .slice(-maxConversationContextMessages)
-            .flatMap((message) => getProjectIdsFromText(message.text)),
-        ),
-      ].slice(-6);
+      return Object.keys(this.getRecentProjectCounts()).slice(-6);
+    },
+    getRecentProjectCounts() {
+      const counts = getProjectCountsFromMessages(
+        this.messages.slice(-maxRecentProjectMemoryMessages),
+      );
+
+      return Object.fromEntries(
+        Object.entries(counts)
+          .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
+          .slice(0, 8),
+      );
     },
     sanitizeDraft() {
       const nextDraft = normalizeSmartPunctuation(this.draft)
