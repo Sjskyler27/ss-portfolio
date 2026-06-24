@@ -145,6 +145,20 @@
       </section>
     </Transition>
 
+    <Transition name="skyler-bot-intro">
+      <button
+        v-if="showIntroPrompt"
+        type="button"
+        class="skyler-bot-intro"
+        :class="{ exiting: isIntroPromptExiting }"
+        aria-label="Open Skyler Bot"
+        @click="openChatFromIntro"
+      >
+        <strong>I'm Skyler's chat bot.</strong>
+        <span>Have a question about him? Ask me.</span>
+      </button>
+    </Transition>
+
     <button
       type="button"
       class="skyler-bot-toggle"
@@ -169,6 +183,7 @@
 import { getCurrentSource } from '../services/sourceInfo';
 
 const storageKey = 'skyler-bot-chat-history';
+const introPromptStorageKey = 'skyler-bot-intro-seen';
 const disableDiscordWebhookKey = 'disable_discord_webhook';
 const rateLimitKey = 'skyler-bot-rate-history';
 const maxQuestionLength = 250;
@@ -201,6 +216,9 @@ const maxConversationContextTextLength = 260;
 const dailyWarningThreshold = Math.ceil(maxMessagesPerDay / 2);
 const minuteMs = 60 * 1000;
 const dayMs = 24 * 60 * 60 * 1000;
+const introPromptDelayMs = 900;
+const introPromptVisibleMs = 5200;
+const introPromptExitMs = 720;
 
 const welcomeMessage = {
   id: 'welcome',
@@ -303,13 +321,20 @@ export default {
       textareaHeight: 44,
       resizeState: null,
       textareaResizeState: null,
+      showIntroPrompt: false,
+      isIntroPromptExiting: false,
+      introPromptTimers: [],
       suggestedQuestions,
     };
   },
   created() {
     this.messages = this.loadMessages();
   },
+  mounted() {
+    this.scheduleIntroPrompt();
+  },
   beforeUnmount() {
+    this.clearIntroPromptTimers();
     this.stopPanelResize();
     this.stopTextareaResize();
     this.stopOutsideClickListener();
@@ -369,6 +394,62 @@ export default {
     },
     toggleChat() {
       this.isOpen = !this.isOpen;
+
+      if (this.isOpen) {
+        this.dismissIntroPrompt({ animate: false });
+      }
+    },
+    openChatFromIntro() {
+      this.dismissIntroPrompt({ animate: false });
+      this.isOpen = true;
+    },
+    scheduleIntroPrompt() {
+      if (getStoredValue(introPromptStorageKey) || this.isOpen) {
+        return;
+      }
+
+      this.introPromptTimers.push(
+        window.setTimeout(() => {
+          if (this.isOpen || getStoredValue(introPromptStorageKey)) {
+            return;
+          }
+
+          this.showIntroPrompt = true;
+          this.introPromptTimers.push(
+            window.setTimeout(() => {
+              this.dismissIntroPrompt({ animate: true });
+            }, introPromptVisibleMs),
+          );
+        }, introPromptDelayMs),
+      );
+    },
+    dismissIntroPrompt({ animate }) {
+      setStoredValue(introPromptStorageKey, '1');
+
+      if (!this.showIntroPrompt) {
+        this.clearIntroPromptTimers();
+        return;
+      }
+
+      this.clearIntroPromptTimers();
+
+      if (!animate) {
+        this.showIntroPrompt = false;
+        this.isIntroPromptExiting = false;
+        return;
+      }
+
+      this.isIntroPromptExiting = true;
+      this.introPromptTimers.push(
+        window.setTimeout(() => {
+          this.showIntroPrompt = false;
+          this.isIntroPromptExiting = false;
+        }, introPromptExitMs),
+      );
+    },
+    clearIntroPromptTimers() {
+      this.introPromptTimers.forEach((timer) => window.clearTimeout(timer));
+      this.introPromptTimers = [];
     },
     startOutsideClickListener() {
       if (typeof document === 'undefined') {
@@ -1202,6 +1283,70 @@ export default {
   line-height: 1.3;
 }
 
+.skyler-bot-intro {
+  position: absolute;
+  right: 0;
+  bottom: 74px;
+  width: min(256px, calc(100vw - 44px));
+  border: 1px solid rgba(38, 113, 111, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 250, 244, 0.96);
+  color: #213136;
+  box-shadow: 0 18px 44px rgba(18, 74, 128, 0.2);
+  font-family: inherit;
+  line-height: 1.35;
+  padding: 13px 15px 14px;
+  text-align: left;
+  transform-origin: calc(100% - 29px) calc(100% + 45px);
+  transition: border-color 180ms ease, box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.skyler-bot-intro::after {
+  content: '';
+  position: absolute;
+  right: 21px;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  border-right: 1px solid rgba(38, 113, 111, 0.16);
+  border-bottom: 1px solid rgba(38, 113, 111, 0.16);
+  background: rgba(255, 250, 244, 0.96);
+  transform: rotate(45deg);
+}
+
+.skyler-bot-intro:hover,
+.skyler-bot-intro:focus-visible {
+  border-color: rgba(241, 143, 85, 0.55);
+  box-shadow: 0 20px 48px rgba(163, 68, 47, 0.22);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.skyler-bot-intro strong,
+.skyler-bot-intro span {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.skyler-bot-intro strong {
+  color: #124a80;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.skyler-bot-intro span {
+  margin-top: 2px;
+  color: #6b6474;
+  font-size: 12.5px;
+}
+
+.skyler-bot-intro.exiting {
+  pointer-events: none;
+  animation: skyler-bot-intro-suck 720ms ease-in forwards;
+}
+
 .skyler-bot-toggle {
   display: inline-flex;
   width: 58px;
@@ -1231,6 +1376,17 @@ export default {
 .skyler-bot-toggle span:last-child {
   font-size: 28px;
   line-height: 1;
+}
+
+.skyler-bot-intro-enter-active,
+.skyler-bot-intro-leave-active {
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.skyler-bot-intro-enter-from,
+.skyler-bot-intro-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
 }
 
 .skyler-bot-panel-enter-active,
@@ -1283,6 +1439,26 @@ export default {
   }
 }
 
+@keyframes skyler-bot-intro-suck {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate(0, 0) scale(1);
+  }
+
+  55% {
+    opacity: 0.9;
+    filter: blur(0);
+    transform: translate(18px, 42px) scale(0.72);
+  }
+
+  100% {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translate(76px, 88px) scale(0.08) rotate(8deg);
+  }
+}
+
 @media (max-width: 560px) {
   .skyler-bot {
     right: 14px;
@@ -1301,6 +1477,11 @@ export default {
 
   .skyler-bot-messages {
     min-height: 0;
+  }
+
+  .skyler-bot-intro {
+    bottom: 70px;
+    width: min(244px, calc(100vw - 28px));
   }
 }
 </style>
