@@ -141,6 +141,17 @@
                   }}</pre>
                 </section>
 
+                <section
+                  v-if="message.diagnostics.retrieval?.toolExperienceAssessment"
+                >
+                  <h4>Tool Check</h4>
+                  <pre>{{
+                    formatDiagnosticsJson(
+                      message.diagnostics.retrieval.toolExperienceAssessment,
+                    )
+                  }}</pre>
+                </section>
+
                 <section>
                   <h4>Matches</h4>
                   <ol>
@@ -151,6 +162,7 @@
                       <strong>{{ match.type }}: {{ match.title }}</strong>
                       <span>
                         score {{ match.score }} · {{ match.sourceUrl || 'no link' }}
+                        <template v-if="match.alwaysInclude"> · always</template>
                       </span>
                       <p>{{ match.evidencePreview }}</p>
                     </li>

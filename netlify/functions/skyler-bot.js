@@ -101,10 +101,25 @@ const excludedKnowledgeSections = [
   'additional notes for future updates',
 ];
 
+const alwaysIncludedKnowledgeSections = [
+  'basic information',
+  'professional summary',
+  'current employment',
+  'ondiem / gig forces',
+];
+
 function isExcludedKnowledgeSection(section) {
   const normalized = section.toLowerCase().trimStart();
 
   return excludedKnowledgeSections.some((heading) =>
+    normalized.startsWith(heading),
+  );
+}
+
+function isAlwaysIncludedKnowledgeSection(section) {
+  const normalized = section.toLowerCase().trimStart();
+
+  return alwaysIncludedKnowledgeSections.some((heading) =>
     normalized.startsWith(heading),
   );
 }
@@ -753,6 +768,7 @@ function createMarkdownChunks(
           source.label === title ? 'Portfolio profile' : source.label,
         sourceUrl: source.url,
         internalSource: title,
+        alwaysInclude: type === 'info' && isAlwaysIncludedKnowledgeSection(section),
         tags: [],
         text: section,
       };
@@ -1258,8 +1274,10 @@ function buildPrivateDiagnostics({
     retrieval: {
       provider: result.debug?.provider || '',
       model: result.debug?.model || '',
+      questionIntents: result.debug?.questionIntents || [],
       queryTokens: result.debug?.queryTokens || [],
       sourceTailoringEnabled: Boolean(result.debug?.sourceTailoringEnabled),
+      toolExperienceAssessment: result.debug?.toolExperienceAssessment || null,
       knowledgeStats: result.debug?.knowledge || null,
       topCandidates: result.debug?.topCandidates || [],
       matches: result.debug?.matches || [],
@@ -1280,8 +1298,10 @@ function buildPublicDebugSummary(debug = {}) {
   return {
     provider: debug.provider || '',
     model: debug.model || '',
+    questionIntents: debug.questionIntents || [],
     queryTokenCount: debug.queryTokenCount || 0,
     sourceTailoringEnabled: Boolean(debug.sourceTailoringEnabled),
+    toolExperienceAssessment: debug.toolExperienceAssessment || null,
     matchCount: debug.matchCount || 0,
     fallbackReason: debug.fallbackReason || '',
     matches: (debug.matches || []).map((match) => ({

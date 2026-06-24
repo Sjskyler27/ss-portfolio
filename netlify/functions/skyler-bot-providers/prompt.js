@@ -84,6 +84,7 @@ function buildGroundingPrompt(
   conversationContext = '',
   repeatPenaltyProjectTitles = [],
   recentProjectUsage = [],
+  toolExperienceAssessment = null,
 ) {
   const usageGuidance = recentProjectUsage.length
     ? `Recent project usage counts: ${recentProjectUsage
@@ -93,6 +94,22 @@ function buildGroundingPrompt(
   const repeatedProjectGuidance = repeatPenaltyProjectTitles.length
     ? `Projects already used recently: ${repeatPenaltyProjectTitles.join(', ')}. Avoid reusing, relinking, or re-explaining these projects unless the visitor directly asks about one of them or no other evidence can answer the question. Still make the answer persuasive by explaining the broader pattern and using fresher evidence when possible.\n`
     : '';
+  const toolExperienceGuidance =
+    toolExperienceAssessment?.requestedTools?.length
+      ? [
+          `Direct tool/domain check: visitor asked about ${toolExperienceAssessment.requestedTools.join(', ')}.`,
+          toolExperienceAssessment.supportedTools?.length
+            ? `Exact requested tool evidence found for: ${toolExperienceAssessment.supportedTools
+                .map((item) => `${item.tool} (${item.evidenceTitles.join('; ')})`)
+                .join(', ')}.`
+            : '',
+          toolExperienceAssessment.unsupportedTools?.length
+            ? `Exact requested tool evidence NOT found for: ${toolExperienceAssessment.unsupportedTools.join(', ')}. For these, do not start with "yes" and do not claim direct experience, familiarity, ownership, or that he knows the tool/domain. Mention the unsupported tool only in the limitation sentence; after that, discuss transferable evidence without repeating or implying that tool/domain.`
+            : '',
+        ]
+          .filter(Boolean)
+          .join('\n')
+      : '';
 
   return [
     conversationContext
@@ -100,6 +117,7 @@ function buildGroundingPrompt(
       : '',
     usageGuidance,
     repeatedProjectGuidance,
+    toolExperienceGuidance ? `${toolExperienceGuidance}\n` : '',
     `Question: ${question}`,
     '',
     'Retrieved portfolio evidence for grounding:',

@@ -49,8 +49,13 @@ function printMatches(matches = []) {
   }
 
   matches.forEach((match, index) => {
+    const flags = [];
+    if (match.alwaysInclude) {
+      flags.push('always');
+    }
+
     console.log(
-      `${index + 1}. ${match.type}:${match.title} score=${match.score} url=${match.sourceUrl || 'none'}`,
+      `${index + 1}. ${match.type}:${match.title} score=${match.score} url=${match.sourceUrl || 'none'}${flags.length ? ` flags=${flags.join(',')}` : ''}`,
     );
     if (match.internalSource) {
       console.log(`   internalSource=${match.internalSource}`);
@@ -156,8 +161,14 @@ async function main() {
   printSection('Retrieval Tokens');
   printJson({
     sourceTailoringEnabled: diagnostics.retrieval.sourceTailoringEnabled,
+    questionIntents: diagnostics.retrieval.questionIntents,
     queryTokens: diagnostics.retrieval.queryTokens,
   });
+
+  if (diagnostics.retrieval.toolExperienceAssessment) {
+    printSection('Tool Experience Check');
+    printJson(diagnostics.retrieval.toolExperienceAssessment);
+  }
 
   printSection('Retrieval Matches');
   printMatches(diagnostics.retrieval.matches);

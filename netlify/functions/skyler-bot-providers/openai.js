@@ -53,6 +53,7 @@ class OpenAIProvider {
 
     context.log('retrieval_complete', {
       provider: this.retrievalProvider.name,
+      questionIntents: retrievalResult.debug.questionIntents,
       queryTokenCount: retrievalResult.debug.queryTokenCount,
       queryTokens: retrievalResult.debug.queryTokens,
       sourceTailoringEnabled: retrievalResult.debug.sourceTailoringEnabled,
@@ -121,6 +122,7 @@ class OpenAIProvider {
                       context.conversationContext,
                       context.repeatPenaltyProjectTitles,
                       context.recentProjectUsage,
+                      retrievalResult.debug.toolExperienceAssessment,
                     ),
                   ].join('\n'),
                 },
