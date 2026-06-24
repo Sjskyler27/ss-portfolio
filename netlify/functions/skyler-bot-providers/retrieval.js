@@ -36,6 +36,21 @@ class RetrievalProvider {
       aliases.push("ondiem", "stonecrest", "professional", "experience");
     }
 
+    if (/\b(hire|hiring|candidate|recruiter|interview|role|job)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "strengths",
+        "professional",
+        "experience",
+        "product",
+        "ownership",
+        "workflows",
+        "collaboration",
+        "debugging",
+        "ondiem",
+        "stonecrest"
+      );
+    }
+
     if (/\b(senior|seniority|junior|mid-level|mid level|level|career timeline|timeline|years|experience level)\b/.test(lowerQuestion)) {
       aliases.push(
         "professional",
@@ -90,6 +105,22 @@ class RetrievalProvider {
       aliases.push("component", "library", "workflows", "documentation", "product");
     }
 
+    if (/\b(documents?|files?|file sync|document management|archive|records?|csv|imports?|exports?)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "document",
+        "workflow",
+        "admin",
+        "tooling",
+        "automation",
+        "data",
+        "csv",
+        "etl",
+        "reporting",
+        "api",
+        "troubleshooting"
+      );
+    }
+
     if (/\b(frontend|front end|web developer|developr|designer|design)\b/.test(lowerQuestion)) {
       aliases.push("frontend", "vue", "react", "figma", "ui");
     }
@@ -135,10 +166,14 @@ class RetrievalProvider {
   }
 
   buildQueryTokens(question, context) {
+    const followUpContext = context.isFollowUpQuestion
+      ? context.conversationContext || ""
+      : "";
+
     return context.tokenize(
       [
         question,
-        context.conversationContext || "",
+        followUpContext,
         ...this.getQueryAliases(question),
       ].join(" ")
     );
@@ -166,7 +201,7 @@ class RetrievalProvider {
       ? sourceProfile.sortOverride.indexOf(chunk.id)
       : -1;
     const sourceProjectBoost =
-      sourceProjectIndex >= 0 ? Math.max(12, 72 - sourceProjectIndex * 8) : 0;
+      sourceProjectIndex >= 0 ? Math.max(2, 8 - sourceProjectIndex) : 0;
     const sourceText = `${chunk.title || ""} ${chunk.sourceLabel || ""}`.toLowerCase();
 
     if (/\beducation|school|degree|bachelor\b/i.test(queryTokens.join(" "))) {
@@ -180,9 +215,7 @@ class RetrievalProvider {
 
   retrieve(question, context, limit = 6) {
     const queryTokens = this.buildQueryTokens(question, context);
-    const scoringTokens = [
-      ...new Set([...queryTokens, ...this.buildSourceTokens(context)]),
-    ];
+    const scoringTokens = [...new Set(queryTokens)];
     const knowledge = context.buildKnowledge();
     const allScored = knowledge
       .map((chunk) => ({

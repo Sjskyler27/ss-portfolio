@@ -883,6 +883,40 @@ function removeFollowUpOffers(answer) {
   return cleanAnswer || String(answer || '').trim();
 }
 
+function isLikelyFollowUpQuestion(question) {
+  const cleanQuestion = normalizeText(question).toLowerCase();
+  const wordCount = cleanQuestion.split(/\s+/).filter(Boolean).length;
+
+  if (!cleanQuestion) {
+    return false;
+  }
+
+  if (
+    /^(sure|yes|yeah|yep|ok|okay|please do|go on|continue|tell me more)\b/.test(
+      cleanQuestion,
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    /^(and|also|what about|how about|does that|is that|would that|could that|that means|so|then)\b/.test(
+      cleanQuestion,
+    )
+  ) {
+    return true;
+  }
+
+  if (/\b(hire|hiring|candidate|recruiter|interview|role|job)\b/.test(cleanQuestion)) {
+    return false;
+  }
+
+  return (
+    wordCount <= 5 &&
+    /\b(he|his|him|that|this|it|those|they|them|there)\b/.test(cleanQuestion)
+  );
+}
+
 function scoreChunk(chunk, queryTokens) {
   return queryTokens.reduce((score, token) => {
     if (chunk.tokens.includes(token)) {
@@ -941,7 +975,13 @@ function convertFirstPersonToThirdPerson(text) {
     .replace(/\bme\b/gi, 'Skyler');
 }
 
-function answerQuestion(question, requestId, sourceKey, conversationContext = '') {
+function answerQuestion(
+  question,
+  requestId,
+  sourceKey,
+  conversationContext = '',
+  isFollowUpQuestion = false,
+) {
   if (isOffTopicPastedContent(question)) {
     debugLog(requestId, 'off_topic_block', {
       questionLength: question.length,
@@ -1039,6 +1079,7 @@ function answerQuestion(question, requestId, sourceKey, conversationContext = ''
     sourceKey,
     sourceProfile,
     conversationContext,
+    isFollowUpQuestion,
     buildKnowledge,
     getKnowledgeStats,
     log: (stage, details = {}) => debugLog(requestId, stage, details),
@@ -1087,6 +1128,7 @@ exports.handler = async (event) => {
   const conversationContext = sanitizeConversationContext(
     payload.conversationContext,
   );
+  const isFollowUpQuestion = isLikelyFollowUpQuestion(question);
   const source = normalizeSourceKey(payload.source);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
 
@@ -1094,6 +1136,7 @@ exports.handler = async (event) => {
     questionLength: question.length,
     questionPreview: previewText(question),
     conversationContextLength: conversationContext.length,
+    isFollowUpQuestion,
     source,
     disableDiscordWebhook,
   });
@@ -1144,6 +1187,7 @@ exports.handler = async (event) => {
       requestId,
       source,
       conversationContext,
+      isFollowUpQuestion,
     );
     result.answer = removeFollowUpOffers(result.answer);
     await notifyDiscordChat(question, result, requestId, {
