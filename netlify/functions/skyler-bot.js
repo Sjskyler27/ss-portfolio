@@ -1087,6 +1087,100 @@ function sanitizeAnswerLinkLabels(answer) {
   );
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function countAnswerLinks(answer) {
+  return extractAnswerLinks(answer).length;
+}
+
+function autoLinkKnownAnswerTitles(answer, maxLinks = 2) {
+  let linkedAnswer = String(answer || '');
+  let linkCount = countAnswerLinks(linkedAnswer);
+
+  if (linkCount >= maxLinks) {
+    return linkedAnswer;
+  }
+
+  const knownTargets = getKnownAnswerLinkTargets()
+    .filter(
+      (target) =>
+        target.type === 'project' ||
+        (target.type === 'experience' && target.label !== 'Experience'),
+    )
+    .sort((left, right) => right.label.length - left.label.length);
+  const usedHrefs = new Set(extractAnswerLinks(linkedAnswer).map((link) => link.href));
+
+  for (const target of knownTargets) {
+    if (linkCount >= maxLinks || usedHrefs.has(target.href)) {
+      continue;
+    }
+
+    const segments = linkedAnswer.split(/(\[[^\]]+\]\([^)]+\))/g);
+    let replaced = false;
+
+    linkedAnswer = segments
+      .map((segment) => {
+        if (replaced || /^\[[^\]]+\]\([^)]+\)$/.test(segment)) {
+          return segment;
+        }
+
+        const pattern = new RegExp(`\\b${escapeRegExp(target.label)}\\b`, 'i');
+
+        if (!pattern.test(segment)) {
+          return segment;
+        }
+
+        replaced = true;
+        return segment.replace(pattern, `[${target.label}](${target.href})`);
+      })
+      .join('');
+
+    if (replaced) {
+      linkCount += 1;
+      usedHrefs.add(target.href);
+    }
+  }
+
+  return linkedAnswer;
+}
+
+function getCitationLabel(match = {}) {
+  return String(match.source || match.title || '')
+    .replace(/^Project:\s*/i, '')
+    .replace(/^Experience:\s*/i, '')
+    .trim();
+}
+
+function ensureAnswerHasCitation(answer, debug = {}) {
+  if (countAnswerLinks(answer) > 0) {
+    return answer;
+  }
+
+  const match = (debug.matches || []).find(
+    (candidate) =>
+      candidate.sourceUrl &&
+      (candidate.type === 'project' ||
+        candidate.type === 'experience'),
+  );
+
+  if (!match) {
+    return answer;
+  }
+
+  const label = getCitationLabel(match);
+
+  if (
+    !label ||
+    !new RegExp(`\\b${escapeRegExp(label)}\\b`, 'i').test(String(answer || ''))
+  ) {
+    return answer;
+  }
+
+  return `${String(answer || '').trim()} See [${label}](${match.sourceUrl}).`;
+}
+
 function getKnowledgeSourceDiagnostics() {
   const knowledgeStatus = getRepoFileStatus(
     'documents/skyler-bot-profile.md',
@@ -1330,7 +1424,7 @@ function isLikelyFollowUpQuestion(question) {
   }
 
   if (
-    /^(and|also|what about|how about|does that|is that|would that|could that|that means|so|then)\b/.test(
+    /^(and|also|what about|how about|how so|does that|is that|would that|could that|that means|so|then)\b/.test(
       cleanQuestion,
     )
   ) {
@@ -1655,7 +1749,12 @@ exports.handler = async (event) => {
     );
     result.answer = removeFollowUpOffers(
       sanitizeAnswerLinkLabels(
-        normalizeAnswerMarkdown(normalizeAnswerLinks(result.answer)),
+        ensureAnswerHasCitation(
+          autoLinkKnownAnswerTitles(
+            normalizeAnswerMarkdown(normalizeAnswerLinks(result.answer)),
+          ),
+          result.debug,
+        ),
       ),
     );
     const privateDiagnostics = buildPrivateDiagnostics({

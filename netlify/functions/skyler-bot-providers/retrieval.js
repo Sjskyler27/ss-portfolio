@@ -37,6 +37,53 @@ class RetrievalProvider {
     }
 
     if (
+      /\b(where does he work|where is he working|who does he work for|current employer|employer|works? at|workplace|company)\b/.test(
+        lowerQuestion
+      )
+    ) {
+      aliases.push(
+        "current",
+        "employer",
+        "ondiem",
+        "gig",
+        "forces",
+        "full-stack",
+        "software",
+        "engineer"
+      );
+    }
+
+    if (/\b(stand out|impressive|differentiates?|sets him apart)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "strengths",
+        "professional",
+        "production",
+        "full-stack",
+        "product",
+        "ownership",
+        "ondiem",
+        "stonecrest",
+        "healthcare",
+        "component"
+      );
+    }
+
+    if (/\b(shipped|delivered|production|professionally|professional work|actually built)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "ondiem",
+        "stonecrest",
+        "app",
+        "rebuild",
+        "onboarding",
+        "component",
+        "state",
+        "partnerships",
+        "production",
+        "professional"
+      );
+    }
+
+    if (
       /\b(history|background|work history)\b/.test(lowerQuestion) ||
       (/\bexperience\b/.test(lowerQuestion) && !asksSpecificToolExperience)
     ) {
@@ -136,6 +183,21 @@ class RetrievalProvider {
       aliases.push("docker", "powershell", "python", "script", "automation");
     }
 
+    if (/\b(linux|ubuntu|wsl)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "ubuntu",
+        "wsl",
+        "shell",
+        "terminal",
+        "docker",
+        "home",
+        "assistant",
+        "automation",
+        "development",
+        "environment"
+      );
+    }
+
     if (/\b(education|school|schooling|college|degree|bachelor)\b/.test(lowerQuestion)) {
       aliases.push("education", "byu-idaho", "degree", "web development");
     }
@@ -190,9 +252,18 @@ class RetrievalProvider {
     return true;
   }
 
+  getImmediateFollowUpContext(conversationContext) {
+    return String(conversationContext || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(-2)
+      .join("\n");
+  }
+
   buildQueryTokens(question, context) {
     const followUpContext = this.shouldUseFollowUpContext(question, context)
-      ? context.conversationContext || ""
+      ? this.getImmediateFollowUpContext(context.conversationContext)
       : "";
 
     return context.tokenize(
