@@ -842,6 +842,27 @@ function validateQuestion(question) {
   return '';
 }
 
+function sanitizeConversationContext(value) {
+  if (!Array.isArray(value)) {
+    return '';
+  }
+
+  return value
+    .slice(-6)
+    .map((message) => {
+      const role = message?.role === 'bot' ? 'Bot' : 'Visitor';
+      const text = normalizeText(message?.text)
+        .replace(/[^A-Za-z0-9 .,?!'"/&():-]/g, '')
+        .slice(0, 180)
+        .trim();
+
+      return text ? `${role}: ${text}` : '';
+    })
+    .filter(Boolean)
+    .join('\n')
+    .slice(0, 1200);
+}
+
 function scoreChunk(chunk, queryTokens) {
   return queryTokens.reduce((score, token) => {
     if (chunk.tokens.includes(token)) {
@@ -900,7 +921,7 @@ function convertFirstPersonToThirdPerson(text) {
     .replace(/\bme\b/gi, 'Skyler');
 }
 
-function answerQuestion(question, requestId, sourceKey) {
+function answerQuestion(question, requestId, sourceKey, conversationContext = '') {
   if (isOffTopicPastedContent(question)) {
     debugLog(requestId, 'off_topic_block', {
       questionLength: question.length,
@@ -997,6 +1018,7 @@ function answerQuestion(question, requestId, sourceKey) {
     requestId,
     sourceKey,
     sourceProfile,
+    conversationContext,
     buildKnowledge,
     getKnowledgeStats,
     log: (stage, details = {}) => debugLog(requestId, stage, details),
@@ -1042,12 +1064,16 @@ exports.handler = async (event) => {
   }
 
   const question = normalizeText(payload.question);
+  const conversationContext = sanitizeConversationContext(
+    payload.conversationContext,
+  );
   const source = normalizeSourceKey(payload.source);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
 
   debugLog(requestId, 'request_received', {
     questionLength: question.length,
     questionPreview: previewText(question),
+    conversationContextLength: conversationContext.length,
     source,
     disableDiscordWebhook,
   });
@@ -1093,7 +1119,12 @@ exports.handler = async (event) => {
   }
 
   try {
-    const result = await answerQuestion(question, requestId, source);
+    const result = await answerQuestion(
+      question,
+      requestId,
+      source,
+      conversationContext,
+    );
     await notifyDiscordChat(question, result, requestId, {
       source,
       disableDiscordWebhook,

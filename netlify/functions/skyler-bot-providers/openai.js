@@ -110,7 +110,11 @@ class OpenAIProvider {
                 {
                   type: 'input_text',
                   text: [
-                    buildGroundingPrompt(question, retrievalResult.answer),
+                    buildGroundingPrompt(
+                      question,
+                      retrievalResult.answer,
+                      context.conversationContext,
+                    ),
                   ].join('\n'),
                 },
               ],
