@@ -196,6 +196,8 @@ const suggestedQuestions = [
 ];
 const maxMessagesPerMinute = 10;
 const maxMessagesPerDay = 35;
+const maxConversationContextMessages = 6;
+const maxConversationContextTextLength = 180;
 const dailyWarningThreshold = Math.ceil(maxMessagesPerDay / 2);
 const minuteMs = 60 * 1000;
 const dayMs = 24 * 60 * 60 * 1000;
@@ -214,6 +216,14 @@ function createMessage(role, text) {
     text,
     createdAt: new Date().toISOString(),
   };
+}
+
+function cleanConversationContextText(value) {
+  return normalizeSmartPunctuation(String(value || ''))
+    .replace(disallowedQuestionChars, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxConversationContextTextLength);
 }
 
 function isSafeMessageHref(href) {
@@ -390,6 +400,7 @@ export default {
       }
 
       const dailyMessageCount = this.recordClientRateHit();
+      const conversationContext = this.getConversationContext();
       this.messages.push(createMessage('user', question));
 
       if (dailyMessageCount === dailyWarningThreshold) {
@@ -413,6 +424,7 @@ export default {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             question,
+            conversationContext,
             source: getCurrentSource(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
@@ -499,6 +511,22 @@ export default {
     },
     saveMessages() {
       setStoredValue(storageKey, JSON.stringify(this.messages.slice(-40)));
+    },
+    getConversationContext() {
+      return this.messages
+        .filter(
+          (message) =>
+            message &&
+            ['bot', 'user'].includes(message.role) &&
+            message.id !== welcomeMessage.id &&
+            message.text !== welcomeMessage.text,
+        )
+        .slice(-maxConversationContextMessages)
+        .map((message) => ({
+          role: message.role,
+          text: cleanConversationContextText(message.text),
+        }))
+        .filter((message) => message.text);
     },
     sanitizeDraft() {
       const nextDraft = normalizeSmartPunctuation(this.draft)

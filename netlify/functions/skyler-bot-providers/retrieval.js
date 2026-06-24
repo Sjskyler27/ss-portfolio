@@ -36,8 +36,36 @@ class RetrievalProvider {
       aliases.push("ondiem", "stonecrest", "professional", "experience");
     }
 
+    if (/\b(senior|seniority|junior|mid-level|mid level|level|career timeline|timeline|years|experience level)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "professional",
+        "experience",
+        "background",
+        "software",
+        "engineer",
+        "ondiem",
+        "education",
+        "projects"
+      );
+    }
+
     if (/\b(strengths?|strongest|good at|best at)\b/.test(lowerQuestion)) {
       aliases.push("strengths", "frontend", "vue", "full-stack", "product");
+    }
+
+    if (/\b(culture|fit|team|collaborat|communication|working style|work style|values|startup|ownership|pace|autonomy)\b/.test(lowerQuestion)) {
+      aliases.push(
+        "culture",
+        "fit",
+        "team",
+        "collaboration",
+        "communication",
+        "ownership",
+        "startup",
+        "product",
+        "debugging",
+        "workflows"
+      );
     }
 
     if (/\b(latest|newest|recent|most recent)\b/.test(lowerQuestion)) {
@@ -93,7 +121,13 @@ class RetrievalProvider {
   }
 
   buildQueryTokens(question, context) {
-    return context.tokenize([question, ...this.getQueryAliases(question)].join(" "));
+    return context.tokenize(
+      [
+        question,
+        context.conversationContext || "",
+        ...this.getQueryAliases(question),
+      ].join(" ")
+    );
   }
 
   dedupeMatches(matches) {

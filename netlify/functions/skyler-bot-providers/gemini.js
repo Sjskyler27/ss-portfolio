@@ -80,7 +80,11 @@ class GeminiProvider {
                     text: [
                       buildSkylerBotInstructions(context.sourceProfile),
                       '',
-                      buildGroundingPrompt(question, retrievalResult.answer),
+                      buildGroundingPrompt(
+                        question,
+                        retrievalResult.answer,
+                        context.conversationContext,
+                      ),
                     ].join('\n'),
                   },
                 ],
