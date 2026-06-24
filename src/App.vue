@@ -1,5 +1,5 @@
 <template>
-  <main id="app">
+  <main id="app" :class="{ 'dark-mode': isDarkMode }">
     <header class="site-header">
       <button class="brand" @click="setView('about')">
         <span>Skyler Simpson</span>
@@ -15,7 +15,24 @@
           <span>{{ item.label }}</span>
         </button>
       </nav>
-      <a href="Resume6-1.pdf" target="_blank" class="resume-link"> Resume </a>
+      <div class="header-actions">
+        <a href="Resume6-1.pdf" target="_blank" class="resume-link">
+          Resume
+        </a>
+        <button
+          type="button"
+          class="theme-toggle"
+          :aria-pressed="isDarkMode.toString()"
+          :aria-label="isDarkMode ? 'Use light mode' : 'Use dark mode'"
+          @click="toggleTheme"
+
+          
+        >
+          <span class="theme-toggle-track" aria-hidden="true">
+            <span class="theme-toggle-thumb"></span>
+          </span>
+        </button>
+      </div>
     </header>
 
     <div class="page-stage">
@@ -342,6 +359,8 @@ import {
   notifySectionView,
 } from './services/notifications';
 
+const themeStorageKey = 'skyler-portfolio-theme';
+
 export default {
   name: 'App',
   components: {
@@ -373,6 +392,7 @@ export default {
       hasMountedPage: false,
       imagePriorityLoaded: false,
       landingProjectId: '',
+      isDarkMode: false,
       navExitDirection: 'nav-fill-back',
       navFillDirection: 'nav-fill-forward',
       pageTransitionName: 'page-arrive',
@@ -382,6 +402,9 @@ export default {
         { id: 'projects', label: 'Projects' },
       ],
     };
+  },
+  created() {
+    this.initializeTheme();
   },
   computed: {
     readyProjects() {
@@ -484,6 +507,39 @@ export default {
     this.handlePortfolioExit();
   },
   methods: {
+    initializeTheme() {
+      let storedTheme = '';
+
+      try {
+        storedTheme = window.localStorage.getItem(themeStorageKey) || '';
+      } catch (error) {
+        storedTheme = '';
+      }
+
+      this.isDarkMode = storedTheme === 'dark';
+      this.syncDocumentTheme();
+    },
+    toggleTheme() {
+      this.isDarkMode = !this.isDarkMode;
+
+      try {
+        window.localStorage.setItem(
+          themeStorageKey,
+          this.isDarkMode ? 'dark' : 'light',
+        );
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to save theme preference', error);
+        }
+      }
+
+      this.syncDocumentTheme();
+    },
+    syncDocumentTheme() {
+      document.documentElement.style.colorScheme = this.isDarkMode
+        ? 'dark'
+        : 'light';
+    },
     getUniqueProjectValues(key) {
       return [
         ...new Set(
@@ -492,7 +548,11 @@ export default {
       ].sort((a, b) => a.localeCompare(b));
     },
     getFavoriteProjectIndex(project) {
-      return this.projects.findIndex(({ id }) => id === project.id);
+      const favoriteOffset = project.favorite ? 0 : this.projects.length;
+
+      return (
+        favoriteOffset + this.projects.findIndex(({ id }) => id === project.id)
+      );
     },
     getRelevantProjectIndex(project) {
       const index = this.sourceProjectOrder.indexOf(project.id);
@@ -703,16 +763,46 @@ body {
 }
 
 #app {
-  margin: 0;
-  background: radial-gradient(
+  --theme-bg: radial-gradient(
       circle at top left,
       rgba(255, 196, 87, 0.28),
       transparent 32rem
     ),
     linear-gradient(135deg, #f8efe5 0%, #edf7f6 46%, #f6edf8 100%);
+  --theme-bg-dark: radial-gradient(
+      circle at top left,
+      rgba(241, 143, 85, 0.18),
+      transparent 30rem
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(38, 113, 111, 0.25),
+      transparent 34rem
+    ),
+    linear-gradient(135deg, #101820 0%, #15242b 48%, #221b2b 100%);
+  --dark-surface: rgba(24, 35, 44, 0.9);
+  --dark-surface-strong: #15222a;
+  --dark-surface-soft: rgba(36, 48, 58, 0.88);
+  --dark-border: rgba(168, 216, 255, 0.2);
+  --dark-border-strong: rgba(168, 216, 255, 0.34);
+  --dark-heading: #a8d8ff;
+  --dark-text: #eef6f5;
+  --dark-muted: #c4cbd1;
+  --dark-subtle: #aeb7c0;
+  --dark-accent: #f6a46f;
+  --dark-accent-text: #ffc59d;
+  --dark-green: #87d9cf;
+  margin: 0;
+  background: var(--theme-bg);
   color: #213136;
   font-family: 'Century Gothic', Arial, sans-serif;
   min-height: 99vh;
+  transition: background 320ms ease, color 220ms ease;
+}
+
+#app.dark-mode {
+  background: var(--theme-bg-dark);
+  color: var(--dark-text);
 }
 
 button,
@@ -760,6 +850,75 @@ button {
 nav {
   display: flex;
   gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  width: 44px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.theme-toggle-track {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(18, 74, 128, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 247, 237, 0.9);
+  box-shadow: inset 0 1px 3px rgba(18, 74, 128, 0.12);
+  transition: background 260ms ease, border-color 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #124a80;
+  box-shadow: 0 5px 12px rgba(163, 68, 47, 0.25);
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 260ms ease, box-shadow 260ms ease;
+}
+
+.theme-toggle:hover .theme-toggle-track,
+.theme-toggle:focus-visible .theme-toggle-track {
+  border-color: #f18f55;
+  box-shadow: 0 0 0 3px rgba(241, 143, 85, 0.18),
+    inset 0 1px 3px rgba(18, 74, 128, 0.12);
+}
+
+.theme-toggle:focus-visible {
+  outline: none;
+}
+
+.dark-mode .theme-toggle-track {
+  border-color: var(--dark-border-strong);
+  background: linear-gradient(135deg, #17232c, #263646);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.42);
+}
+
+.dark-mode .theme-toggle-thumb {
+  background: var(--dark-heading);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.34);
+  transform: translateX(18px);
 }
 
 nav button,
@@ -1560,6 +1719,213 @@ p {
   transform: translateY(0);
 }
 
+.dark-mode .site-header,
+.dark-mode .project-controls,
+.dark-mode .experience-grid article,
+.dark-mode .project-card,
+.dark-mode .project-empty-state {
+  border-color: var(--dark-border);
+  background: var(--dark-surface);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.26);
+}
+
+.dark-mode .brand span,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode nav button:not(.active):hover,
+.dark-mode .resume-link,
+.dark-mode .detail-links a,
+.dark-mode .project-filter-toggle,
+.dark-mode .project-filter-reset,
+.dark-mode .carousel button,
+.dark-mode .magnify-icon {
+  color: var(--dark-heading);
+}
+
+.dark-mode .brand small,
+.dark-mode .project-result-count {
+  color: var(--dark-subtle);
+}
+
+.dark-mode p,
+.dark-mode .project-empty-state {
+  color: var(--dark-muted);
+}
+
+.dark-mode .eyebrow,
+.dark-mode .experience-grid article > span,
+.dark-mode .project-type {
+  color: var(--dark-accent-text);
+}
+
+.dark-mode nav button::before,
+.dark-mode .about-actions button:first-child,
+.dark-mode .project-filter-toggle:hover,
+.dark-mode .project-filter-toggle:focus-visible,
+.dark-mode .project-filter-toggle.active,
+.dark-mode .modal-close {
+  background: var(--dark-heading);
+}
+
+.dark-mode nav button.active,
+.dark-mode .about-actions button:first-child,
+.dark-mode .project-filter-toggle:hover,
+.dark-mode .project-filter-toggle:focus-visible,
+.dark-mode .project-filter-toggle.active,
+.dark-mode .modal-close {
+  color: #101820;
+}
+
+.dark-mode nav button:not(.active):hover,
+.dark-mode .project-filter-toggle:hover,
+.dark-mode .project-filter-toggle:focus-visible,
+.dark-mode .project-filter-toggle.active {
+  border-color: var(--dark-heading);
+}
+
+.dark-mode .resume-link,
+.dark-mode .detail-links a,
+.dark-mode .about-actions button:last-child,
+.dark-mode .project-filter-reset,
+.dark-mode .carousel button {
+  border-color: var(--dark-accent);
+  background: var(--dark-surface-soft);
+}
+
+.dark-mode .project-controls input,
+.dark-mode .project-controls select,
+.dark-mode .project-tech-options {
+  border-color: var(--dark-border-strong);
+  background-color: var(--dark-surface-strong);
+  color: var(--dark-text);
+}
+
+.dark-mode .project-controls select {
+  background-image: linear-gradient(
+      45deg,
+      transparent 50%,
+      var(--dark-heading) 50%
+    ),
+    linear-gradient(135deg, var(--dark-heading) 50%, transparent 50%),
+    linear-gradient(to right, var(--dark-border), var(--dark-border));
+}
+
+.dark-mode .project-controls input::placeholder {
+  color: rgba(238, 246, 245, 0.52);
+}
+
+.dark-mode .project-controls > label > span,
+.dark-mode .project-tech-filter > span,
+.dark-mode .impact,
+.dark-mode .tag-list span,
+.dark-mode .project-tech-options span {
+  color: var(--dark-green);
+}
+
+.dark-mode .tag-list span {
+  background: rgba(135, 217, 207, 0.15);
+}
+
+.dark-mode .project-tech-options label:hover,
+.dark-mode .project-tech-options label:focus-within {
+  background: rgba(168, 216, 255, 0.11);
+}
+
+.dark-mode .project-card:hover,
+.dark-mode .project-card:focus-visible {
+  border-color: var(--dark-green);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.32);
+}
+
+.dark-mode .project-modal-backdrop,
+.dark-mode .image-modal {
+  background: rgba(5, 12, 18, 0.82);
+}
+
+.dark-mode .project-modal {
+  border-color: rgba(168, 216, 255, 0.2);
+  background: linear-gradient(
+    135deg,
+    rgba(23, 34, 43, 0.98),
+    rgba(26, 48, 54, 0.98)
+  );
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+.dark-mode .carousel img,
+.dark-mode .image-modal img {
+  background: #0d151c;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: var(--dark-heading);
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background-color: #101820;
+}
+
+.dark-mode .skyler-bot-panel {
+  border-color: var(--dark-border);
+  background: linear-gradient(
+    180deg,
+    rgba(23, 34, 43, 0.98),
+    rgba(26, 48, 54, 0.98)
+  );
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .skyler-bot-header,
+.dark-mode .skyler-bot-form,
+.dark-mode .skyler-bot-suggestions,
+.dark-mode .skyler-bot-intro,
+.dark-mode .skyler-bot-intro::after {
+  border-color: var(--dark-border);
+  background: var(--dark-surface);
+}
+
+.dark-mode .skyler-bot-title > span:not(.skyler-bot-avatar),
+.dark-mode .skyler-bot-avatar,
+.dark-mode .skyler-bot-toggle,
+.dark-mode .skyler-bot-form > button,
+.dark-mode .skyler-bot-suggestion,
+.dark-mode .skyler-bot-intro strong {
+  color: var(--dark-heading);
+}
+
+.dark-mode .skyler-bot-header small,
+.dark-mode .skyler-bot-intro span,
+.dark-mode .skyler-bot-message time {
+  color: var(--dark-subtle);
+}
+
+.dark-mode .skyler-bot-message.bot {
+  border-color: var(--dark-border);
+  background: rgba(21, 34, 42, 0.84);
+  color: var(--dark-text);
+}
+
+.dark-mode .skyler-bot-message.user,
+.dark-mode .skyler-bot-avatar,
+.dark-mode .skyler-bot-toggle,
+.dark-mode .skyler-bot-form > button,
+.dark-mode .skyler-bot-suggestion,
+.dark-mode .skyler-bot-input-resize-handle,
+.dark-mode .skyler-bot-resize-handle {
+  background: var(--dark-surface-soft);
+}
+
+.dark-mode .skyler-bot-input-wrap textarea {
+  border-color: var(--dark-border-strong);
+  background: var(--dark-surface-strong);
+  color: var(--dark-text);
+}
+
+.dark-mode .skyler-bot-toggle {
+  border-color: var(--dark-accent);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-arrive-enter-active,
   .page-swipe-forward-enter-active,
@@ -1607,7 +1973,7 @@ p {
 
 @media screen and (max-width: 760px) {
   .site-header {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px 6px;
     padding: 12px 16px;
   }
@@ -1624,9 +1990,11 @@ p {
     min-width: 0;
   }
 
-  .resume-link {
-    grid-column: 4;
-    width: auto;
+  .header-actions {
+    grid-column: 4 / -1;
+    justify-content: flex-end;
+    gap: 6px;
+    min-width: 0;
   }
 
   nav button,

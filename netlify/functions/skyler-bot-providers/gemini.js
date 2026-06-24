@@ -23,8 +23,10 @@ class GeminiProvider {
 
     context.log('retrieval_complete', {
       provider: this.retrievalProvider.name,
+      questionIntents: retrievalResult.debug.questionIntents,
       queryTokenCount: retrievalResult.debug.queryTokenCount,
       queryTokens: retrievalResult.debug.queryTokens,
+      sourceTailoringEnabled: retrievalResult.debug.sourceTailoringEnabled,
       knowledge: retrievalResult.debug.knowledge,
       matches: retrievalResult.debug.matches,
       topCandidates: retrievalResult.debug.topCandidates,
@@ -78,12 +80,19 @@ class GeminiProvider {
                 parts: [
                   {
                     text: [
-                      buildSkylerBotInstructions(context.sourceProfile),
+                      buildSkylerBotInstructions(
+                        retrievalResult.debug.sourceTailoringEnabled
+                          ? context.sourceProfile
+                          : null,
+                      ),
                       '',
                       buildGroundingPrompt(
                         question,
                         retrievalResult.answer,
                         context.conversationContext,
+                        context.repeatPenaltyProjectTitles,
+                        context.recentProjectUsage,
+                        retrievalResult.debug.toolExperienceAssessment,
                       ),
                     ].join('\n'),
                   },

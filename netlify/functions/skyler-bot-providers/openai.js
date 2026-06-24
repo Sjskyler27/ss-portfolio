@@ -53,8 +53,10 @@ class OpenAIProvider {
 
     context.log('retrieval_complete', {
       provider: this.retrievalProvider.name,
+      questionIntents: retrievalResult.debug.questionIntents,
       queryTokenCount: retrievalResult.debug.queryTokenCount,
       queryTokens: retrievalResult.debug.queryTokens,
+      sourceTailoringEnabled: retrievalResult.debug.sourceTailoringEnabled,
       knowledge: retrievalResult.debug.knowledge,
       matches: retrievalResult.debug.matches,
       topCandidates: retrievalResult.debug.topCandidates,
@@ -102,7 +104,11 @@ class OpenAIProvider {
         },
         body: JSON.stringify({
           model: this.model,
-          instructions: buildSkylerBotInstructions(context.sourceProfile),
+          instructions: buildSkylerBotInstructions(
+            retrievalResult.debug.sourceTailoringEnabled
+              ? context.sourceProfile
+              : null,
+          ),
           input: [
             {
               role: 'user',
@@ -114,6 +120,9 @@ class OpenAIProvider {
                       question,
                       retrievalResult.answer,
                       context.conversationContext,
+                      context.repeatPenaltyProjectTitles,
+                      context.recentProjectUsage,
+                      retrievalResult.debug.toolExperienceAssessment,
                     ),
                   ].join('\n'),
                 },

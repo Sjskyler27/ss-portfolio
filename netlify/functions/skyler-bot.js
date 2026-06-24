@@ -101,10 +101,25 @@ const excludedKnowledgeSections = [
   'additional notes for future updates',
 ];
 
+const alwaysIncludedKnowledgeSections = [
+  'basic information',
+  'professional summary',
+  'current employment',
+  'ondiem / gig forces',
+];
+
 function isExcludedKnowledgeSection(section) {
   const normalized = section.toLowerCase().trimStart();
 
   return excludedKnowledgeSections.some((heading) =>
+    normalized.startsWith(heading),
+  );
+}
+
+function isAlwaysIncludedKnowledgeSection(section) {
+  const normalized = section.toLowerCase().trimStart();
+
+  return alwaysIncludedKnowledgeSections.some((heading) =>
     normalized.startsWith(heading),
   );
 }
@@ -227,6 +242,20 @@ function debugLog(requestId, stage, details = {}) {
   );
 }
 
+function privateDiagnosticsLog(requestId, diagnostics) {
+  console.log(
+    JSON.stringify(
+      {
+        scope: 'skyler-bot-private-diagnostics',
+        requestId,
+        ...diagnostics,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 function cleanDiscordValue(value, maxLength = 900) {
   if (typeof value !== 'string') {
     return '';
@@ -241,7 +270,7 @@ function cleanDiscordValue(value, maxLength = 900) {
   return `${cleanValue.slice(0, maxLength - 3).trim()}...`;
 }
 
-function formatDiscordChatMessage(question, result, requestId, source) {
+function formatDiscordChatMessage(question, result, requestId, source, user) {
   const provider = result.debug?.provider || 'unknown';
   const matchCount = Number(result.debug?.matchCount) || 0;
   const lines = [
@@ -249,6 +278,7 @@ function formatDiscordChatMessage(question, result, requestId, source) {
     'Skyler Bot chat',
     `Request: ${requestId}`,
     `Source: ${cleanDiscordValue(source, 80) || 'unknown'}`,
+    `User: ${cleanDiscordValue(user, 40) || 'Unknown'}`,
     `Provider: ${provider}`,
     `Matches: ${matchCount}`,
     `Question: ${cleanDiscordValue(question, 450)}`,
@@ -298,6 +328,7 @@ async function notifyDiscordChat(question, result, requestId, options = {}) {
           result,
           requestId,
           options.source,
+          options.user,
         ),
         flags: suppressNotificationsFlag,
       }),
@@ -393,6 +424,22 @@ function findRepoFile(relativePath) {
   ];
 
   return candidates.find((candidate) => fs.existsSync(candidate));
+}
+
+function getRepoFileStatus(relativePath, encryptedEnvName = '') {
+  const plainPath = findRepoFile(relativePath);
+  const encryptedPath = findRepoFile(`${relativePath}.enc`);
+
+  return {
+    relativePath,
+    plainFound: Boolean(plainPath),
+    encryptedFound: Boolean(encryptedPath),
+    readMode: plainPath ? 'plain' : encryptedPath ? 'encrypted' : 'missing',
+    encryptedEnvName,
+    decryptKeyConfigured: encryptedEnvName
+      ? Boolean(process.env[encryptedEnvName])
+      : false,
+  };
 }
 
 function readTextFile(relativePath) {
@@ -616,10 +663,17 @@ function createProjectChunks(projects) {
     title: project.title,
     sourceLabel: `Project: ${project.title}`,
     sourceUrl: `/projects/${encodeURIComponent(project.id)}`,
-    tags: [project.type, ...(project.tech || [])],
+    tags: [
+      project.type,
+      project.favorite ? 'Skyler favorite project' : '',
+      ...(project.tech || []),
+    ].filter(Boolean),
     text: removeSensitiveSentences(
       [
         project.title,
+        project.favorite
+          ? 'Skyler favorite project and strongest personal showcase.'
+          : '',
         project.type,
         project.summary,
         project.impact,
@@ -716,6 +770,7 @@ function createMarkdownChunks(
           source.label === title ? 'Portfolio profile' : source.label,
         sourceUrl: source.url,
         internalSource: title,
+        alwaysInclude: type === 'info' && isAlwaysIncludedKnowledgeSection(section),
         tags: [],
         text: section,
       };
@@ -847,20 +902,565 @@ function sanitizeConversationContext(value) {
     return '';
   }
 
+  const compactContextText = (text) => {
+    if (text.length <= 260) {
+      return text;
+    }
+
+    return `${text.slice(0, 130).trim()} ... ${text.slice(-120).trim()}`;
+  };
+
   return value
     .slice(-6)
     .map((message) => {
       const role = message?.role === 'bot' ? 'Bot' : 'Visitor';
       const text = normalizeText(message?.text)
         .replace(/[^A-Za-z0-9 .,?!'"/&():-]/g, '')
-        .slice(0, 180)
         .trim();
 
-      return text ? `${role}: ${text}` : '';
+      return text ? `${role}: ${compactContextText(text)}` : '';
     })
     .filter(Boolean)
     .join('\n')
     .slice(0, 1200);
+}
+
+function removeFollowUpOffers(answer) {
+  let cleanAnswer = String(answer || '').trim();
+  const followUpParagraphPattern =
+    /(?:\n\s*){1,2}(?:if you (?:want|would like)|if you'd like|i can also|i can point|want me to|would you like|do you want)\b[\s\S]*$/i;
+  const followUpSentencePattern =
+    /\s+(?:if you (?:want|would like)|if you'd like|i can also|i can point|want me to|would you like|do you want)\b[^.!?]*(?:[.!?]|$)\s*$/i;
+
+  cleanAnswer = cleanAnswer.replace(followUpParagraphPattern, '').trim();
+  cleanAnswer = cleanAnswer.replace(followUpSentencePattern, '').trim();
+
+  return cleanAnswer || String(answer || '').trim();
+}
+
+function normalizeAnswerLinks(answer) {
+  return String(answer || '').replace(/\]\(\s+(\/[^)\s]+)\)/g, ']($1)');
+}
+
+function normalizeAnswerMarkdown(answer) {
+  return String(answer || '')
+    .replace(/\*\*(\[[^\]]+\]\([^)]+\))\*\*/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1');
+}
+
+function isPrivateDiagnosticsLogEnabled() {
+  return (
+    process.env.SKYLER_BOT_PRIVATE_DEBUG === 'true' ||
+    process.env.SKYLER_BOT_PRIVATE_DEBUG_LOGS === 'true'
+  );
+}
+
+function isLocalDebugOrigin(event) {
+  const origin = getRequestOrigin(event);
+
+  return !origin || localAllowedOrigins.includes(origin);
+}
+
+function getHeaderValue(event, headerName) {
+  const headers = event.headers || {};
+  const lowerHeaderName = headerName.toLowerCase();
+  const matchingHeaderName = Object.keys(headers).find(
+    (name) => name.toLowerCase() === lowerHeaderName,
+  );
+
+  return matchingHeaderName ? headers[matchingHeaderName] : '';
+}
+
+function isPrivateDiagnosticsResponseAllowed(event, payload = {}) {
+  if (!payload.includePrivateDiagnostics) {
+    return false;
+  }
+
+  if (
+    process.env.SKYLER_BOT_PRIVATE_DEBUG_RESPONSE !== 'true' &&
+    process.env.SKYLER_BOT_DEBUG_RESPONSE !== 'private'
+  ) {
+    return false;
+  }
+
+  const configuredToken = process.env.SKYLER_BOT_PRIVATE_DEBUG_TOKEN || '';
+
+  if (configuredToken) {
+    const providedToken =
+      getHeaderValue(event, 'x-skyler-bot-debug-token') ||
+      payload.debugToken ||
+      '';
+
+    return providedToken === configuredToken;
+  }
+
+  return isLocalDebugOrigin(event);
+}
+
+function getKnownAnswerLinkTargets() {
+  const projects = loadExportedArray('src/data/projects.js', 'projects')
+    .filter((project) => !project.notReady)
+    .map((project) => ({
+      type: 'project',
+      href: `/projects/${encodeURIComponent(project.id)}`,
+      label: project.title,
+      aliases: [project.title, `Project: ${project.title}`],
+    }));
+  const experienceItems = loadExportedArray(
+    'src/data/experience.js',
+    'experienceItems',
+  );
+  const experienceLabels = [
+    'experience',
+    'portfolio overview',
+    'his portfolio overview',
+    'working style and culture fit',
+    ...experienceItems.flatMap((item) => [
+      item.organization,
+      `${item.organization} experience`,
+      `Experience: ${item.organization}`,
+    ]),
+  ];
+
+  return [
+    ...projects,
+    {
+      type: 'experience',
+      href: '/experience',
+      label: 'Experience',
+      aliases: experienceLabels,
+    },
+    {
+      type: 'home',
+      href: '/',
+      label: 'Portfolio overview',
+      aliases: ['Portfolio overview', 'portfolio'],
+    },
+  ];
+}
+
+function extractAnswerLinks(answer) {
+  const links = [];
+  const linkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let match = linkPattern.exec(answer || '');
+
+  while (match) {
+    links.push({
+      text: normalizeText(match[1]),
+      href: String(match[2] || '').trim(),
+    });
+    match = linkPattern.exec(answer || '');
+  }
+
+  return links;
+}
+
+function analyzeAnswerLinks(answer) {
+  const knownTargets = getKnownAnswerLinkTargets();
+
+  return extractAnswerLinks(answer).map((link) => {
+    const target = knownTargets.find((candidate) => candidate.href === link.href);
+    const normalizedLinkText = link.text.toLowerCase();
+    const allowedAnchorText = target
+      ? target.aliases.some(
+          (alias) => normalizeText(alias).toLowerCase() === normalizedLinkText,
+        )
+      : false;
+
+    return {
+      ...link,
+      targetType: target?.type || 'unknown',
+      expectedLabel: target?.label || '',
+      allowedAnchorText,
+      issue:
+        target && !allowedAnchorText
+          ? 'anchor_text_is_not_a_known_project_or_experience_label'
+          : !target && link.href.startsWith('/')
+            ? 'unknown_internal_link_target'
+            : '',
+    };
+  });
+}
+
+function sanitizeAnswerLinkLabels(answer) {
+  const knownTargets = getKnownAnswerLinkTargets();
+
+  return String(answer || '').replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (fullMatch, rawText, rawHref) => {
+      const href = String(rawHref || '').trim();
+      const target = knownTargets.find((candidate) => candidate.href === href);
+
+      if (!target) {
+        return href.startsWith('/') ? normalizeText(rawText) : fullMatch;
+      }
+
+      const normalizedText = normalizeText(rawText).toLowerCase();
+      const allowedAnchorText = target.aliases.some(
+        (alias) => normalizeText(alias).toLowerCase() === normalizedText,
+      );
+
+      return allowedAnchorText ? fullMatch : `[${target.label}](${href})`;
+    },
+  );
+}
+
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function countAnswerLinks(answer) {
+  return extractAnswerLinks(answer).length;
+}
+
+function autoLinkKnownAnswerTitles(answer, maxLinks = 2) {
+  let linkedAnswer = String(answer || '');
+  let linkCount = countAnswerLinks(linkedAnswer);
+
+  if (linkCount >= maxLinks) {
+    return linkedAnswer;
+  }
+
+  const knownTargets = getKnownAnswerLinkTargets()
+    .filter(
+      (target) =>
+        target.type === 'project' ||
+        (target.type === 'experience' && target.label !== 'Experience'),
+    )
+    .sort((left, right) => right.label.length - left.label.length);
+  const usedHrefs = new Set(extractAnswerLinks(linkedAnswer).map((link) => link.href));
+
+  for (const target of knownTargets) {
+    if (linkCount >= maxLinks || usedHrefs.has(target.href)) {
+      continue;
+    }
+
+    const segments = linkedAnswer.split(/(\[[^\]]+\]\([^)]+\))/g);
+    let replaced = false;
+
+    linkedAnswer = segments
+      .map((segment) => {
+        if (replaced || /^\[[^\]]+\]\([^)]+\)$/.test(segment)) {
+          return segment;
+        }
+
+        const pattern = new RegExp(`\\b${escapeRegExp(target.label)}\\b`, 'i');
+
+        if (!pattern.test(segment)) {
+          return segment;
+        }
+
+        replaced = true;
+        return segment.replace(pattern, `[${target.label}](${target.href})`);
+      })
+      .join('');
+
+    if (replaced) {
+      linkCount += 1;
+      usedHrefs.add(target.href);
+    }
+  }
+
+  return linkedAnswer;
+}
+
+function getCitationLabel(match = {}) {
+  return String(match.source || match.title || '')
+    .replace(/^Project:\s*/i, '')
+    .replace(/^Experience:\s*/i, '')
+    .trim();
+}
+
+function ensureAnswerHasCitation(answer, debug = {}) {
+  if (countAnswerLinks(answer) > 0) {
+    return answer;
+  }
+
+  const match = (debug.matches || []).find(
+    (candidate) =>
+      candidate.sourceUrl &&
+      (candidate.type === 'project' ||
+        candidate.type === 'experience'),
+  );
+
+  if (!match) {
+    return answer;
+  }
+
+  const label = getCitationLabel(match);
+
+  if (
+    !label ||
+    !new RegExp(`\\b${escapeRegExp(label)}\\b`, 'i').test(String(answer || ''))
+  ) {
+    return answer;
+  }
+
+  return `${String(answer || '').trim()} See [${label}](${match.sourceUrl}).`;
+}
+
+function getKnowledgeSourceDiagnostics() {
+  const knowledgeStatus = getRepoFileStatus(
+    'documents/skyler-bot-profile.md',
+    'BOT_INFO_KEY',
+  );
+  const sourceProfileStatus = getRepoFileStatus(
+    'documents/source-info.private.json',
+    'SOURCE_INFO_KEY',
+  );
+  const publicSourceStatus = getRepoFileStatus('src/data/source-info.json');
+
+  return {
+    files: {
+      publicSources: publicSourceStatus,
+      encryptedKnowledge: knowledgeStatus,
+      sourceProfiles: sourceProfileStatus,
+    },
+    knowledgeStats: getKnowledgeStats(),
+    internalKnowledgeChunks: buildKnowledge()
+      .filter((chunk) => chunk.internalSource)
+      .reduce((stats, chunk) => {
+        stats[chunk.internalSource] = (stats[chunk.internalSource] || 0) + 1;
+        return stats;
+      }, {}),
+  };
+}
+
+function summarizeSourceProfile(sourceProfile) {
+  if (!sourceProfile) {
+    return null;
+  }
+
+  return {
+    id: sourceProfile.id || '',
+    key: sourceProfile.key || '',
+    label: sourceProfile.label || '',
+    role: sourceProfile.role || '',
+    targetSkills: sourceProfile.targetSkills || [],
+    responsibilities: sourceProfile.responsibilities || [],
+    sortOverride: sourceProfile.sortOverride || [],
+    answerGuidance: sourceProfile.answerGuidance || [],
+    companySummary: sourceProfile.companySummary || '',
+    cultureSummary: sourceProfile.cultureSummary || '',
+    jobSummary: sourceProfile.jobSummary || '',
+    jobDescriptionPreview: previewText(sourceProfile.jobDescription || '', 600),
+  };
+}
+
+function buildPrivateDiagnostics({
+  requestId,
+  question,
+  source,
+  sourceProfile,
+  conversationContext,
+  recentProjectIds,
+  recentProjectCounts,
+  isFollowUpQuestion,
+  result,
+}) {
+  return {
+    stage: 'private_diagnostics',
+    request: {
+      question,
+      source,
+      isFollowUpQuestion,
+    },
+    knowledge: getKnowledgeSourceDiagnostics(),
+    sourceProfile: summarizeSourceProfile(sourceProfile),
+    memory: {
+      conversationContext,
+      recentProjectIds,
+      recentProjectCounts,
+      recentProjectUsage: getProjectUsageSummaries(recentProjectCounts),
+    },
+    retrieval: {
+      provider: result.debug?.provider || '',
+      model: result.debug?.model || '',
+      questionIntents: result.debug?.questionIntents || [],
+      queryTokens: result.debug?.queryTokens || [],
+      sourceTailoringEnabled: Boolean(result.debug?.sourceTailoringEnabled),
+      toolExperienceAssessment: result.debug?.toolExperienceAssessment || null,
+      knowledgeStats: result.debug?.knowledge || null,
+      topCandidates: result.debug?.topCandidates || [],
+      matches: result.debug?.matches || [],
+      fallbackReason: result.debug?.fallbackReason || '',
+    },
+    answer: {
+      text: result.answer || '',
+      links: analyzeAnswerLinks(result.answer || ''),
+      linkIssues: analyzeAnswerLinks(result.answer || '').filter(
+        (link) => link.issue,
+      ),
+    },
+    requestId,
+  };
+}
+
+function buildPublicDebugSummary(debug = {}) {
+  return {
+    provider: debug.provider || '',
+    model: debug.model || '',
+    questionIntents: debug.questionIntents || [],
+    queryTokenCount: debug.queryTokenCount || 0,
+    sourceTailoringEnabled: Boolean(debug.sourceTailoringEnabled),
+    toolExperienceAssessment: debug.toolExperienceAssessment || null,
+    matchCount: debug.matchCount || 0,
+    fallbackReason: debug.fallbackReason || '',
+    matches: (debug.matches || []).map((match) => ({
+      title: match.title,
+      type: match.type,
+      source: match.source,
+      sourceUrl: match.sourceUrl,
+      score: match.score,
+    })),
+    topCandidates: debug.topCandidates || [],
+    knowledge: debug.knowledge || null,
+  };
+}
+
+function getRecentProjectMentions(conversationContext) {
+  const contextText = normalizeText(conversationContext).toLowerCase();
+
+  if (!contextText) {
+    return [];
+  }
+
+  return buildKnowledge()
+    .filter((chunk) => chunk.type === 'project' && chunk.id)
+    .filter((project) => {
+      const title = String(project.title || '').toLowerCase();
+      const route = `/projects/${encodeURIComponent(project.id)}`.toLowerCase();
+
+      return contextText.includes(route) || (title && contextText.includes(title));
+    })
+    .map((project) => project.id);
+}
+
+function sanitizeRecentProjectIds(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const validProjectIds = new Set(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => project.id),
+  );
+
+  return [
+    ...new Set(
+      value
+        .map((id) => String(id || '').trim())
+        .filter((id) => /^[A-Za-z0-9_-]+$/.test(id) && validProjectIds.has(id)),
+    ),
+  ].slice(-6);
+}
+
+function getValidProjectIds() {
+  return new Set(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => project.id),
+  );
+}
+
+function sanitizeRecentProjectCounts(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  const validProjectIds = getValidProjectIds();
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([projectId, count]) => [
+        String(projectId || '').trim(),
+        Math.min(Math.max(Number.parseInt(count, 10) || 0, 0), 6),
+      ])
+      .filter(
+        ([projectId, count]) =>
+          /^[A-Za-z0-9_-]+$/.test(projectId) &&
+          validProjectIds.has(projectId) &&
+          count > 0,
+      )
+      .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
+      .slice(0, 8),
+  );
+}
+
+function getRecentProjectIds(conversationContext, explicitProjectIds = []) {
+  return [
+    ...new Set([
+      ...explicitProjectIds,
+      ...getRecentProjectMentions(conversationContext),
+    ]),
+  ];
+}
+
+function getRepeatPenaltyProjectIds(question, explicitProjectIds = []) {
+  return isLikelyFollowUpQuestion(question) ? [] : explicitProjectIds;
+}
+
+function getProjectTitlesById(projectIds = []) {
+  const projectsById = new Map(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => [project.id, project.title]),
+  );
+
+  return projectIds
+    .map((projectId) => projectsById.get(projectId))
+    .filter(Boolean);
+}
+
+function getProjectUsageSummaries(projectCounts = {}) {
+  const projectsById = new Map(
+    buildKnowledge()
+      .filter((chunk) => chunk.type === 'project' && chunk.id)
+      .map((project) => [project.id, project.title]),
+  );
+
+  return Object.entries(projectCounts)
+    .map(([projectId, count]) => ({
+      id: projectId,
+      title: projectsById.get(projectId),
+      count,
+    }))
+    .filter((project) => project.title);
+}
+
+function isLikelyFollowUpQuestion(question) {
+  const cleanQuestion = normalizeText(question).toLowerCase();
+  const wordCount = cleanQuestion.split(/\s+/).filter(Boolean).length;
+
+  if (!cleanQuestion) {
+    return false;
+  }
+
+  if (
+    /^(sure|yes|yeah|yep|ok|okay|please do|go on|continue|tell me more)\b/.test(
+      cleanQuestion,
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    /^(and|also|what about|how about|how so|does that|is that|would that|could that|that means|so|then)\b/.test(
+      cleanQuestion,
+    )
+  ) {
+    return true;
+  }
+
+  if (/\b(hire|hiring|candidate|recruiter|interview|role|job)\b/.test(cleanQuestion)) {
+    return false;
+  }
+
+  return (
+    wordCount <= 5 &&
+    /\b(that|this|it|those|they|them|there)\b/.test(cleanQuestion)
+  );
 }
 
 function scoreChunk(chunk, queryTokens) {
@@ -921,7 +1521,15 @@ function convertFirstPersonToThirdPerson(text) {
     .replace(/\bme\b/gi, 'Skyler');
 }
 
-function answerQuestion(question, requestId, sourceKey, conversationContext = '') {
+function answerQuestion(
+  question,
+  requestId,
+  sourceKey,
+  conversationContext = '',
+  isFollowUpQuestion = false,
+  explicitRecentProjectIds = [],
+  explicitRecentProjectCounts = {},
+) {
   if (isOffTopicPastedContent(question)) {
     debugLog(requestId, 'off_topic_block', {
       questionLength: question.length,
@@ -1008,10 +1616,29 @@ function answerQuestion(question, requestId, sourceKey, conversationContext = ''
 
   const sourceProfile = getSourceProfile(sourceKey);
   const provider = getSkylerBotProvider();
+  const recentProjectMentions = getRecentProjectIds(
+    conversationContext,
+    explicitRecentProjectIds,
+  );
+  const recentProjectCounts = {
+    ...Object.fromEntries(recentProjectMentions.map((projectId) => [projectId, 1])),
+    ...explicitRecentProjectCounts,
+  };
+  const repeatPenaltyProjectIds = getRepeatPenaltyProjectIds(
+    question,
+    recentProjectMentions,
+  );
+  const repeatPenaltyProjectTitles = getProjectTitlesById(repeatPenaltyProjectIds);
+  const recentProjectUsage = getProjectUsageSummaries(recentProjectCounts);
   debugLog(requestId, 'provider_selected', {
     provider: provider.name,
     source: sourceKey || '',
     hasSourceProfile: Boolean(sourceProfile),
+    recentProjectMentions,
+    recentProjectCounts,
+    repeatPenaltyProjectIds,
+    repeatPenaltyProjectTitles,
+    recentProjectUsage,
   });
 
   return provider.answerQuestion(question, {
@@ -1019,6 +1646,12 @@ function answerQuestion(question, requestId, sourceKey, conversationContext = ''
     sourceKey,
     sourceProfile,
     conversationContext,
+    isFollowUpQuestion,
+    recentProjectMentions,
+    recentProjectCounts,
+    recentProjectUsage,
+    repeatPenaltyProjectIds,
+    repeatPenaltyProjectTitles,
     buildKnowledge,
     getKnowledgeStats,
     log: (stage, details = {}) => debugLog(requestId, stage, details),
@@ -1067,14 +1700,24 @@ exports.handler = async (event) => {
   const conversationContext = sanitizeConversationContext(
     payload.conversationContext,
   );
+  const recentProjectIds = sanitizeRecentProjectIds(payload.recentProjectIds);
+  const recentProjectCounts = sanitizeRecentProjectCounts(
+    payload.recentProjectCounts,
+  );
+  const isFollowUpQuestion = isLikelyFollowUpQuestion(question);
   const source = normalizeSourceKey(payload.source);
+  const user = cleanDiscordValue(payload.user, 40);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
 
   debugLog(requestId, 'request_received', {
     questionLength: question.length,
     questionPreview: previewText(question),
     conversationContextLength: conversationContext.length,
+    recentProjectIds,
+    recentProjectCounts,
+    isFollowUpQuestion,
     source,
+    user: user || 'Unknown',
     disableDiscordWebhook,
   });
 
@@ -1124,9 +1767,39 @@ exports.handler = async (event) => {
       requestId,
       source,
       conversationContext,
+      isFollowUpQuestion,
+      recentProjectIds,
+      recentProjectCounts,
     );
+    result.answer = removeFollowUpOffers(
+      sanitizeAnswerLinkLabels(
+        ensureAnswerHasCitation(
+          autoLinkKnownAnswerTitles(
+            normalizeAnswerMarkdown(normalizeAnswerLinks(result.answer)),
+          ),
+          result.debug,
+        ),
+      ),
+    );
+    const privateDiagnostics = buildPrivateDiagnostics({
+      requestId,
+      question,
+      source,
+      sourceProfile: getSourceProfile(source),
+      conversationContext,
+      recentProjectIds,
+      recentProjectCounts,
+      isFollowUpQuestion,
+      result,
+    });
+
+    if (isPrivateDiagnosticsLogEnabled()) {
+      privateDiagnosticsLog(requestId, privateDiagnostics);
+    }
+
     await notifyDiscordChat(question, result, requestId, {
       source,
+      user,
       disableDiscordWebhook,
     });
 
@@ -1149,7 +1822,11 @@ exports.handler = async (event) => {
     }
 
     if (process.env.SKYLER_BOT_DEBUG_RESPONSE === 'true') {
-      publicBody.debug = result.debug;
+      publicBody.debug = buildPublicDebugSummary(result.debug);
+    }
+
+    if (isPrivateDiagnosticsResponseAllowed(event, payload)) {
+      publicBody.privateDiagnostics = privateDiagnostics;
     }
 
     return {

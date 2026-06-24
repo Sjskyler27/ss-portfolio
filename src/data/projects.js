@@ -2,6 +2,7 @@ export const projects = [
   {
     id: 'healthcare_app',
     title: 'Healthcare Data Platform',
+    favorite: true,
     type: 'Personal Project',
     category: 'featured',
     group: 'fullstack',

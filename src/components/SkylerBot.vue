@@ -64,6 +64,128 @@
             <time :datetime="message.createdAt">
               {{ formatMessageTime(message.createdAt) }}
             </time>
+            <details
+              v-if="message.diagnostics"
+              class="skyler-bot-diagnostics"
+            >
+              <summary>Diagnostics</summary>
+              <div class="skyler-bot-diagnostics-grid">
+                <section>
+                  <h4>Request</h4>
+                  <dl>
+                    <div>
+                      <dt>ID</dt>
+                      <dd>{{ message.diagnostics.requestId }}</dd>
+                    </div>
+                    <div>
+                      <dt>Source</dt>
+                      <dd>{{ message.diagnostics.request?.source || 'none' }}</dd>
+                    </div>
+                    <div>
+                      <dt>Tailoring</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.retrieval?.sourceTailoringEnabled
+                            ? 'on'
+                            : 'off'
+                        }}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section>
+                  <h4>Knowledge</h4>
+                  <dl>
+                    <div>
+                      <dt>Chunks</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.knowledge?.knowledgeStats
+                            ?.totalChunks || 0
+                        }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Info</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.knowledge?.knowledgeStats
+                            ?.byType?.info || 0
+                        }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Profile</dt>
+                      <dd>
+                        {{
+                          message.diagnostics.knowledge?.files
+                            ?.encryptedKnowledge?.readMode || 'unknown'
+                        }}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+
+                <section>
+                  <h4>Memory</h4>
+                  <pre>{{ formatDiagnosticsJson(message.diagnostics.memory) }}</pre>
+                </section>
+
+                <section>
+                  <h4>Tokens</h4>
+                  <pre>{{
+                    formatDiagnosticsJson(
+                      message.diagnostics.retrieval?.queryTokens || [],
+                    )
+                  }}</pre>
+                </section>
+
+                <section
+                  v-if="message.diagnostics.retrieval?.toolExperienceAssessment"
+                >
+                  <h4>Tool Check</h4>
+                  <pre>{{
+                    formatDiagnosticsJson(
+                      message.diagnostics.retrieval.toolExperienceAssessment,
+                    )
+                  }}</pre>
+                </section>
+
+                <section>
+                  <h4>Matches</h4>
+                  <ol>
+                    <li
+                      v-for="match in getDiagnosticsMatches(message.diagnostics)"
+                      :key="`${message.id}-${match.type}-${match.title}-${match.score}`"
+                    >
+                      <strong>{{ match.type }}: {{ match.title }}</strong>
+                      <span>
+                        score {{ match.score }} · {{ match.sourceUrl || 'no link' }}
+                        <template v-if="match.alwaysInclude"> · always</template>
+                      </span>
+                      <p>{{ match.evidencePreview }}</p>
+                    </li>
+                  </ol>
+                </section>
+
+                <section>
+                  <h4>Links</h4>
+                  <ol v-if="message.diagnostics.answer?.links?.length">
+                    <li
+                      v-for="link in message.diagnostics.answer.links"
+                      :key="`${message.id}-${link.href}-${link.text}`"
+                      :class="{ issue: link.issue }"
+                    >
+                      <strong>{{ link.text }}</strong>
+                      <span>{{ link.href }}</span>
+                      <em v-if="link.issue">{{ link.issue }}</em>
+                    </li>
+                  </ol>
+                  <p v-else>No links.</p>
+                </section>
+              </div>
+            </details>
           </article>
 
           <article
@@ -145,6 +267,20 @@
       </section>
     </Transition>
 
+    <Transition name="skyler-bot-intro">
+      <button
+        v-if="showIntroPrompt"
+        type="button"
+        class="skyler-bot-intro"
+        :class="{ exiting: isIntroPromptExiting }"
+        aria-label="Open Skyler Bot"
+        @click="openChatFromIntro"
+      >
+        <strong>I'm Skyler's chat bot.</strong>
+        <span>Have a question about him? Ask me.</span>
+      </button>
+    </Transition>
+
     <button
       type="button"
       class="skyler-bot-toggle"
@@ -166,14 +302,20 @@
 </template>
 
 <script>
+import { getNotificationUserName } from '../services/notifications';
 import { getCurrentSource } from '../services/sourceInfo';
 
 const storageKey = 'skyler-bot-chat-history';
+const introPromptStorageKey = 'skyler-bot-intro-seen';
 const disableDiscordWebhookKey = 'disable_discord_webhook';
 const rateLimitKey = 'skyler-bot-rate-history';
+const enableBotDiagnostics =
+  process.env.VUE_APP_SKYLER_BOT_DEBUG === 'true';
+const botDiagnosticsToken = process.env.VUE_APP_SKYLER_BOT_DEBUG_TOKEN || '';
 const maxQuestionLength = 250;
 const allowedQuestionPattern = /^[A-Za-z0-9 .,?!'"/&():-]*$/;
 const disallowedQuestionChars = /[^A-Za-z0-9 .,?!'"/&():-]/g;
+const projectLinkPattern = /\/projects\/([A-Za-z0-9_-]+)/g;
 // Map smart punctuation (mobile auto-insert) to ASCII so it is kept, not stripped.
 const smartPunctuationReplacements = [
   [/[‘’‚‛]/g, "'"],
@@ -197,10 +339,14 @@ const suggestedQuestions = [
 const maxMessagesPerMinute = 10;
 const maxMessagesPerDay = 35;
 const maxConversationContextMessages = 6;
-const maxConversationContextTextLength = 180;
+const maxRecentProjectMemoryMessages = 20;
+const maxConversationContextTextLength = 260;
 const dailyWarningThreshold = Math.ceil(maxMessagesPerDay / 2);
 const minuteMs = 60 * 1000;
 const dayMs = 24 * 60 * 60 * 1000;
+const introPromptDelayMs = 900;
+const introPromptVisibleMs = 5200;
+const introPromptExitMs = 720;
 
 const welcomeMessage = {
   id: 'welcome',
@@ -218,12 +364,51 @@ function createMessage(role, text) {
   };
 }
 
+function createBotMessage(text, diagnostics = null) {
+  return {
+    ...createMessage('bot', text),
+    ...(diagnostics ? { diagnostics } : {}),
+  };
+}
+
 function cleanConversationContextText(value) {
-  return normalizeSmartPunctuation(String(value || ''))
+  const cleanText = normalizeSmartPunctuation(String(value || ''))
     .replace(disallowedQuestionChars, '')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxConversationContextTextLength);
+    .trim();
+
+  if (cleanText.length <= maxConversationContextTextLength) {
+    return cleanText;
+  }
+
+  return `${cleanText.slice(0, 130).trim()} ... ${cleanText
+    .slice(-120)
+    .trim()}`;
+}
+
+function getProjectIdsFromText(value) {
+  const ids = new Set();
+  const text = String(value || '');
+
+  projectLinkPattern.lastIndex = 0;
+  let match = projectLinkPattern.exec(text);
+
+  while (match) {
+    ids.add(decodeURIComponent(match[1]));
+    match = projectLinkPattern.exec(text);
+  }
+
+  return [...ids];
+}
+
+function getProjectCountsFromMessages(messages) {
+  return messages.reduce((counts, message) => {
+    getProjectIdsFromText(message.text).forEach((projectId) => {
+      counts[projectId] = (counts[projectId] || 0) + 1;
+    });
+
+    return counts;
+  }, {});
 }
 
 function isSafeMessageHref(href) {
@@ -296,13 +481,20 @@ export default {
       textareaHeight: 44,
       resizeState: null,
       textareaResizeState: null,
+      showIntroPrompt: false,
+      isIntroPromptExiting: false,
+      introPromptTimers: [],
       suggestedQuestions,
     };
   },
   created() {
     this.messages = this.loadMessages();
   },
+  mounted() {
+    this.scheduleIntroPrompt();
+  },
   beforeUnmount() {
+    this.clearIntroPromptTimers();
     this.stopPanelResize();
     this.stopTextareaResize();
     this.stopOutsideClickListener();
@@ -362,6 +554,62 @@ export default {
     },
     toggleChat() {
       this.isOpen = !this.isOpen;
+
+      if (this.isOpen) {
+        this.dismissIntroPrompt({ animate: false });
+      }
+    },
+    openChatFromIntro() {
+      this.dismissIntroPrompt({ animate: false });
+      this.isOpen = true;
+    },
+    scheduleIntroPrompt() {
+      if (getStoredValue(introPromptStorageKey) || this.isOpen) {
+        return;
+      }
+
+      this.introPromptTimers.push(
+        window.setTimeout(() => {
+          if (this.isOpen || getStoredValue(introPromptStorageKey)) {
+            return;
+          }
+
+          this.showIntroPrompt = true;
+          this.introPromptTimers.push(
+            window.setTimeout(() => {
+              this.dismissIntroPrompt({ animate: true });
+            }, introPromptVisibleMs),
+          );
+        }, introPromptDelayMs),
+      );
+    },
+    dismissIntroPrompt({ animate }) {
+      setStoredValue(introPromptStorageKey, '1');
+
+      if (!this.showIntroPrompt) {
+        this.clearIntroPromptTimers();
+        return;
+      }
+
+      this.clearIntroPromptTimers();
+
+      if (!animate) {
+        this.showIntroPrompt = false;
+        this.isIntroPromptExiting = false;
+        return;
+      }
+
+      this.isIntroPromptExiting = true;
+      this.introPromptTimers.push(
+        window.setTimeout(() => {
+          this.showIntroPrompt = false;
+          this.isIntroPromptExiting = false;
+        }, introPromptExitMs),
+      );
+    },
+    clearIntroPromptTimers() {
+      this.introPromptTimers.forEach((timer) => window.clearTimeout(timer));
+      this.introPromptTimers = [];
     },
     startOutsideClickListener() {
       if (typeof document === 'undefined') {
@@ -401,6 +649,9 @@ export default {
 
       const dailyMessageCount = this.recordClientRateHit();
       const conversationContext = this.getConversationContext();
+      const recentProjectIds = this.getRecentProjectIds();
+      const recentProjectCounts = this.getRecentProjectCounts();
+      const includePrivateDiagnostics = this.shouldRequestDiagnostics();
       this.messages.push(createMessage('user', question));
 
       if (dailyMessageCount === dailyWarningThreshold) {
@@ -421,11 +672,23 @@ export default {
         const startedAt = performance.now();
         const response = await fetch('/.netlify/functions/skyler-bot', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(includePrivateDiagnostics && botDiagnosticsToken
+              ? { 'x-skyler-bot-debug-token': botDiagnosticsToken }
+              : {}),
+          },
           body: JSON.stringify({
             question,
             conversationContext,
+            recentProjectIds,
+            recentProjectCounts,
+            includePrivateDiagnostics,
+            ...(includePrivateDiagnostics && botDiagnosticsToken
+              ? { debugToken: botDiagnosticsToken }
+              : {}),
             source: getCurrentSource(),
+            user: getNotificationUserName(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
         });
@@ -439,25 +702,26 @@ export default {
           status: response.status,
           elapsedMs,
           debug: payload.debug,
+          privateDiagnostics: Boolean(payload.privateDiagnostics),
         });
 
         if (!response.ok) {
           this.messages.push(
-            createMessage(
-              'bot',
+            createBotMessage(
               payload.answer ||
                 payload.error ||
                 "That question cannot be answered by Skyler Bot. Try asking about Skyler's work, projects, skills, or education.",
+              payload.privateDiagnostics || null,
             ),
           );
           return;
         }
 
         this.messages.push(
-          createMessage(
-            'bot',
+          createBotMessage(
             payload.answer ||
               'I could not find a good answer in the portfolio context yet.',
+            payload.privateDiagnostics || null,
           ),
         );
       } catch (error) {
@@ -466,8 +730,7 @@ export default {
           questionLength: question.length,
         });
         this.messages.push(
-          createMessage(
-            'bot',
+          createBotMessage(
             'I could not reach the portfolio knowledge base. Please try again in a moment.',
           ),
         );
@@ -497,6 +760,9 @@ export default {
             role: message.role,
             text: message.text,
             createdAt: message.createdAt || new Date().toISOString(),
+            ...(enableBotDiagnostics && message.diagnostics
+              ? { diagnostics: message.diagnostics }
+              : {}),
           }));
 
         return validMessages.length
@@ -510,7 +776,12 @@ export default {
       }
     },
     saveMessages() {
-      setStoredValue(storageKey, JSON.stringify(this.messages.slice(-40)));
+      const messages = this.messages.slice(-40).map((message) => ({
+        ...message,
+        ...(enableBotDiagnostics ? {} : { diagnostics: undefined }),
+      }));
+
+      setStoredValue(storageKey, JSON.stringify(messages));
     },
     getConversationContext() {
       return this.messages
@@ -527,6 +798,20 @@ export default {
           text: cleanConversationContextText(message.text),
         }))
         .filter((message) => message.text);
+    },
+    getRecentProjectIds() {
+      return Object.keys(this.getRecentProjectCounts()).slice(-6);
+    },
+    getRecentProjectCounts() {
+      const counts = getProjectCountsFromMessages(
+        this.messages.slice(-maxRecentProjectMemoryMessages),
+      );
+
+      return Object.fromEntries(
+        Object.entries(counts)
+          .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
+          .slice(0, 8),
+      );
     },
     sanitizeDraft() {
       const nextDraft = normalizeSmartPunctuation(this.draft)
@@ -577,6 +862,15 @@ export default {
     },
     isDiscordWebhookDisabled() {
       return Boolean(getStoredValue(disableDiscordWebhookKey));
+    },
+    shouldRequestDiagnostics() {
+      return enableBotDiagnostics;
+    },
+    formatDiagnosticsJson(value) {
+      return JSON.stringify(value || null, null, 2);
+    },
+    getDiagnosticsMatches(diagnostics) {
+      return (diagnostics?.retrieval?.matches || []).slice(0, 8);
     },
     formatMessageTime(value) {
       const date = new Date(value);
@@ -984,6 +1278,113 @@ export default {
   line-height: 1;
 }
 
+.skyler-bot-diagnostics {
+  margin-top: 9px;
+  border-top: 1px solid rgba(38, 113, 111, 0.16);
+  padding-top: 8px;
+  font-size: 11px;
+}
+
+.skyler-bot-diagnostics summary {
+  color: #124a80;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.skyler-bot-diagnostics section {
+  min-width: 0;
+}
+
+.skyler-bot-diagnostics h4 {
+  margin: 0 0 5px;
+  color: #124a80;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics dl {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+}
+
+.skyler-bot-diagnostics dl div {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 6px;
+}
+
+.skyler-bot-diagnostics dt {
+  color: #6b6474;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.skyler-bot-diagnostics pre {
+  max-height: 150px;
+  overflow: auto;
+  border: 1px solid rgba(38, 113, 111, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 250, 244, 0.74);
+  color: #213136;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.35;
+  margin: 0;
+  padding: 7px;
+  white-space: pre-wrap;
+}
+
+.skyler-bot-diagnostics ol {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 17px;
+}
+
+.skyler-bot-diagnostics li {
+  min-width: 0;
+}
+
+.skyler-bot-diagnostics li strong,
+.skyler-bot-diagnostics li span,
+.skyler-bot-diagnostics li em {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.skyler-bot-diagnostics li span {
+  color: #6b6474;
+}
+
+.skyler-bot-diagnostics li em {
+  color: #a3442f;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.skyler-bot-diagnostics li.issue {
+  color: #a3442f;
+}
+
+.skyler-bot-diagnostics p {
+  margin: 2px 0 0;
+  color: #4f5f63;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .skyler-bot-message.bot {
   align-self: flex-start;
   border: 1px solid rgba(38, 113, 111, 0.12);
@@ -1195,6 +1596,70 @@ export default {
   line-height: 1.3;
 }
 
+.skyler-bot-intro {
+  position: absolute;
+  right: 0;
+  bottom: 74px;
+  width: min(256px, calc(100vw - 44px));
+  border: 1px solid rgba(38, 113, 111, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 250, 244, 0.96);
+  color: #213136;
+  box-shadow: 0 18px 44px rgba(18, 74, 128, 0.2);
+  font-family: inherit;
+  line-height: 1.35;
+  padding: 13px 15px 14px;
+  text-align: left;
+  transform-origin: calc(100% - 29px) calc(100% + 45px);
+  transition: border-color 180ms ease, box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.skyler-bot-intro::after {
+  content: '';
+  position: absolute;
+  right: 21px;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  border-right: 1px solid rgba(38, 113, 111, 0.16);
+  border-bottom: 1px solid rgba(38, 113, 111, 0.16);
+  background: rgba(255, 250, 244, 0.96);
+  transform: rotate(45deg);
+}
+
+.skyler-bot-intro:hover,
+.skyler-bot-intro:focus-visible {
+  border-color: rgba(241, 143, 85, 0.55);
+  box-shadow: 0 20px 48px rgba(163, 68, 47, 0.22);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.skyler-bot-intro strong,
+.skyler-bot-intro span {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.skyler-bot-intro strong {
+  color: #124a80;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.skyler-bot-intro span {
+  margin-top: 2px;
+  color: #6b6474;
+  font-size: 12.5px;
+}
+
+.skyler-bot-intro.exiting {
+  pointer-events: none;
+  animation: skyler-bot-intro-suck 720ms ease-in forwards;
+}
+
 .skyler-bot-toggle {
   display: inline-flex;
   width: 58px;
@@ -1224,6 +1689,17 @@ export default {
 .skyler-bot-toggle span:last-child {
   font-size: 28px;
   line-height: 1;
+}
+
+.skyler-bot-intro-enter-active,
+.skyler-bot-intro-leave-active {
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.skyler-bot-intro-enter-from,
+.skyler-bot-intro-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
 }
 
 .skyler-bot-panel-enter-active,
@@ -1276,6 +1752,26 @@ export default {
   }
 }
 
+@keyframes skyler-bot-intro-suck {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate(0, 0) scale(1);
+  }
+
+  55% {
+    opacity: 0.9;
+    filter: blur(0);
+    transform: translate(18px, 42px) scale(0.72);
+  }
+
+  100% {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translate(76px, 88px) scale(0.08) rotate(8deg);
+  }
+}
+
 @media (max-width: 560px) {
   .skyler-bot {
     right: 14px;
@@ -1294,6 +1790,11 @@ export default {
 
   .skyler-bot-messages {
     min-height: 0;
+  }
+
+  .skyler-bot-intro {
+    bottom: 70px;
+    width: min(244px, calc(100vw - 28px));
   }
 }
 </style>
