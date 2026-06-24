@@ -25,6 +25,8 @@
           :aria-pressed="isDarkMode.toString()"
           :aria-label="isDarkMode ? 'Use light mode' : 'Use dark mode'"
           @click="toggleTheme"
+
+          
         >
           <span class="theme-toggle-track" aria-hidden="true">
             <span class="theme-toggle-thumb"></span>

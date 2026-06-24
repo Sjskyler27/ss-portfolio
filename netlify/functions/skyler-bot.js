@@ -270,7 +270,7 @@ function cleanDiscordValue(value, maxLength = 900) {
   return `${cleanValue.slice(0, maxLength - 3).trim()}...`;
 }
 
-function formatDiscordChatMessage(question, result, requestId, source) {
+function formatDiscordChatMessage(question, result, requestId, source, user) {
   const provider = result.debug?.provider || 'unknown';
   const matchCount = Number(result.debug?.matchCount) || 0;
   const lines = [
@@ -278,6 +278,7 @@ function formatDiscordChatMessage(question, result, requestId, source) {
     'Skyler Bot chat',
     `Request: ${requestId}`,
     `Source: ${cleanDiscordValue(source, 80) || 'unknown'}`,
+    `User: ${cleanDiscordValue(user, 40) || 'Unknown'}`,
     `Provider: ${provider}`,
     `Matches: ${matchCount}`,
     `Question: ${cleanDiscordValue(question, 450)}`,
@@ -327,6 +328,7 @@ async function notifyDiscordChat(question, result, requestId, options = {}) {
           result,
           requestId,
           options.source,
+          options.user,
         ),
         flags: suppressNotificationsFlag,
       }),
@@ -1704,6 +1706,7 @@ exports.handler = async (event) => {
   );
   const isFollowUpQuestion = isLikelyFollowUpQuestion(question);
   const source = normalizeSourceKey(payload.source);
+  const user = cleanDiscordValue(payload.user, 40);
   const disableDiscordWebhook = Boolean(payload.disableDiscordWebhook);
 
   debugLog(requestId, 'request_received', {
@@ -1714,6 +1717,7 @@ exports.handler = async (event) => {
     recentProjectCounts,
     isFollowUpQuestion,
     source,
+    user: user || 'Unknown',
     disableDiscordWebhook,
   });
 
@@ -1795,6 +1799,7 @@ exports.handler = async (event) => {
 
     await notifyDiscordChat(question, result, requestId, {
       source,
+      user,
       disableDiscordWebhook,
     });
 

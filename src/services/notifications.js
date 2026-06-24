@@ -130,7 +130,7 @@ function generateUserName() {
   return `${name}${suffix + 10}`;
 }
 
-function getUserName() {
+export function getNotificationUserName() {
   const existingUser = getStoredValue(localStorage, userKey);
 
   if (existingUser) {
@@ -159,7 +159,7 @@ function getSessionInfo() {
   const session = {
     startedAt: new Date().toISOString(),
     sessionNumber: previousCount + 1,
-    user: getUserName(),
+    user: getNotificationUserName(),
   };
 
   setStoredValue(localStorage, sessionCountKey, String(session.sessionNumber));

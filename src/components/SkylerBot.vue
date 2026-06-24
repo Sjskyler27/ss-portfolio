@@ -302,6 +302,7 @@
 </template>
 
 <script>
+import { getNotificationUserName } from '../services/notifications';
 import { getCurrentSource } from '../services/sourceInfo';
 
 const storageKey = 'skyler-bot-chat-history';
@@ -687,6 +688,7 @@ export default {
               ? { debugToken: botDiagnosticsToken }
               : {}),
             source: getCurrentSource(),
+            user: getNotificationUserName(),
             disableDiscordWebhook: this.isDiscordWebhookDisabled(),
           }),
         });
