@@ -78,6 +78,40 @@ export const projects = [
     links: [],
   },
   {
+    id: 'healthcare_referral_ocr_ai',
+    title: 'Healthcare Referral OCR & AI Extraction Pipeline',
+    type: 'Personal Project',
+    category: 'featured',
+    group: 'fullstack',
+    summary:
+      'A healthcare-focused document extraction system that converts referral PDFs, images, and text documents into structured referral data using OCR, PDF text extraction, and configurable LLM providers.',
+    impact:
+      'Built an agnostic referral extraction workflow that accepts uploaded PDFs, images, and example documents, extracts plain text through swappable document-text providers, then sends the text through configurable AI model providers to produce structured patient, provider, diagnosis, and requested-service data.',
+    description:
+      'This project was built as part of a healthcare data platform to explore practical AI-assisted referral intake workflows. I designed and implemented a referral OCR interface where users can upload text files, PDFs, or images, run extraction, and view the result as both a readable form and raw JSON. On the backend, I separated document text extraction from AI extraction so each layer can be swapped independently. The document extraction layer supports provider-style implementations such as pypdf for digital PDFs, OCR.space or other free OCR services for images, and future Google Vision or Document AI providers. The AI layer uses reusable provider abstractions with generate_text() and generate_json() methods, allowing Gemini, OpenAI, Claude, mock providers, or other LLM APIs to be configured through environment variables. Referral-specific logic lives separately from provider code, with its own prompt, schema, service, and examples, so the product workflow decides what data to extract while provider code only handles communication with a model API. The system demonstrates an AI-powered ETL pattern where files are converted to plain text, text is converted to structured referral JSON, and extracted fields can later be reviewed, saved, or promoted into patient and referral records.',
+    images: [
+      'healthcare_referral_ocr_ai/1.png',
+      'healthcare_referral_ocr_ai/2.png',
+    ],
+    tech: [
+      'AI product',
+      'Gemini API',
+      'LLM Provider Abstraction',
+      'OCR',
+      'OCR.space',
+      'pypdf',
+      'PDF Text Extraction',
+      'Third Party APIs',
+      'JSON Schema',
+      'Prompt Engineering',
+      'Environment-Based Configuration',
+      'Healthcare Data Modeling',
+      'Document Processing',
+      'AI-Assisted ETL',
+    ],
+    links: [],
+  },
+  {
     id: 'everee_payroll_integration',
     title: 'Everee Payroll API Integration',
     notReady: true,
