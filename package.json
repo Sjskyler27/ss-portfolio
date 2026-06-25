@@ -9,6 +9,7 @@
     "skyler-bot:smoke": "node scripts/skyler-bot-smoke.js",
     "skyler-bot:ask": "node scripts/skyler-bot-ask.js",
     "skyler-bot:diagnostics": "node scripts/skyler-bot-diagnostics.js",
+    "skyler-bot:security": "node scripts/skyler-bot-security-probe.js",
     "skyler-bot:encrypt": "node scripts/skyler-bot-encrypt.js",
     "skyler-bot:decrypt": "node scripts/skyler-bot-decrypt.js",
     "source-info:sort": "node scripts/source-info-sort.js",

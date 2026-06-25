@@ -37,20 +37,26 @@ const privateInfoPatterns = [
 // engine he built, his document-processing/OCR work).
 const suspiciousQuestionPatterns = [
   /\bsystem prompt\b/i,
+  /\bprompt\s+(del\s+)?sistema\b/i,
+  /\bprompt\s+systeme\b/i,
   /\byour\s+(prompt|instructions?|rules|guardrails?|system message|knowledge base|knowledge file|training data|source files?|context)\b/i,
   /\b(ignore|disregard|forget)\s+(all\s+)?(previous|prior|above|the|your)\b/i,
+  /\b(ignora|ignorar|ignore|ignorer|ignoriere)\b.*\b(reglas|instrucciones|instructions?|anweisungen|regras)\b/i,
   /\b(override|bypass|jailbreak|developer message)\b/i,
   /\b(reveal|expose|leak|dump|print|repeat|show me|list out)\b.*\b(prompt|instructions?|hidden|context|knowledge base|source files?)\b/i,
+  /\b(revela|revelar|montre|mostrar|mostre|zeige)\b.*\b(prompt|instrucciones|instructions?|cache|hidden|contexto|context|sistema|systeme)\b/i,
   // Introspection about the bot's own data sources/files.
   /\b(markdown|md files?|\.md\b|source files?|knowledge base|knowledge file|information file|profile notes)\b/i,
   /\bwhat\b[^?]*\b(files?|sources?|documents?|data)\b[^?]*\bdo you\b/i,
   // Secrets — note plural forms (api keys, environment variables, etc.).
   /\b(api keys?|secret keys?|environment variables?|env vars?|webhook urls?|access tokens?)\b/i,
+  /\b(chaves?\s+de\s+api|variaveis?\s+de\s+ambiente|tokens?|secrets?|segredos?)\b/i,
 ];
 
 const portfolioBoundaryQuestionPatterns = [
   /\b(repeat|print|dump|show|list out|give me)\b.*\b(all\s+)?(evidence|raw evidence|retrieved evidence|source chunks?|raw context|full context)\b/i,
   /\b(verbatim|word for word|exactly)\b.*\b(evidence|source material|context|retrieved|knowledge)\b/i,
+  /\b(source material|source notes?|private notes?)\b.*\b(verbatim|word for word|exactly|quote|repeat|print|dump)\b/i,
   /\b(private|hidden|source-specific|personalized?)\b.*\b(job description|source|tailoring|context|guidance)\b/i,
   /\b(tailor(?:ed|ing)?|personaliz(?:ed|ing)?|emphasiz(?:e|ing)?)\b.*\b(source|job description|iconhealth|dave|company)\b/i,
   /\banswer\s+as\s+skyler\b/i,
@@ -917,6 +923,14 @@ function sanitizeConversationContext(value) {
       const text = normalizeText(message?.text)
         .replace(/[^A-Za-z0-9 .,?!'"/&():-]/g, '')
         .trim();
+
+      if (
+        isSuspiciousQuestion(text) ||
+        isPortfolioBoundaryQuestion(text) ||
+        isPrivateQuestion(text)
+      ) {
+        return '';
+      }
 
       return text ? `${role}: ${compactContextText(text)}` : '';
     })
