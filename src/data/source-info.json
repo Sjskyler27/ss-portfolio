@@ -22,6 +22,30 @@
         "legal-tech",
         "legal_tech"
       ]
+    },
+    {
+      "id": 3,
+      "key": "cbl",
+      "label": "CBL Solutions",
+      "urlKey": "cbl",
+      "aliases": [
+        "cbl-solutions",
+        "cbl_solutions",
+        "deepak",
+        "deepak-kumar"
+      ]
+    },
+    {
+      "id": 4,
+      "key": "bcbs",
+      "label": "BCBS of South Carolina",
+      "urlKey": "bcbs",
+      "aliases": [
+        "blue-cross-blue-shield",
+        "blue_cross_blue_shield",
+        "bcbssc",
+        "commercial-web"
+      ]
     }
   ]
 }
