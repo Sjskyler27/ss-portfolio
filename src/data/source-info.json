@@ -46,6 +46,18 @@
         "bcbssc",
         "commercial-web"
       ]
+    },
+    {
+      "id": 5,
+      "key": "aiml",
+      "label": "AIML",
+      "urlKey": "aiml",
+      "aliases": [
+        "ai-ml",
+        "ai_ml",
+        "enterprise-financial-client",
+        "detroit-python"
+      ]
     }
   ]
 }
