@@ -64,10 +64,7 @@
             <time :datetime="message.createdAt">
               {{ formatMessageTime(message.createdAt) }}
             </time>
-            <details
-              v-if="message.diagnostics"
-              class="skyler-bot-diagnostics"
-            >
+            <details v-if="message.diagnostics" class="skyler-bot-diagnostics">
               <summary>Diagnostics</summary>
               <div class="skyler-bot-diagnostics-grid">
                 <section>
@@ -79,7 +76,9 @@
                     </div>
                     <div>
                       <dt>Source</dt>
-                      <dd>{{ message.diagnostics.request?.source || 'none' }}</dd>
+                      <dd>
+                        {{ message.diagnostics.request?.source || 'none' }}
+                      </dd>
                     </div>
                     <div>
                       <dt>Tailoring</dt>
@@ -110,8 +109,8 @@
                       <dt>Info</dt>
                       <dd>
                         {{
-                          message.diagnostics.knowledge?.knowledgeStats
-                            ?.byType?.info || 0
+                          message.diagnostics.knowledge?.knowledgeStats?.byType
+                            ?.info || 0
                         }}
                       </dd>
                     </div>
@@ -129,7 +128,9 @@
 
                 <section>
                   <h4>Memory</h4>
-                  <pre>{{ formatDiagnosticsJson(message.diagnostics.memory) }}</pre>
+                  <pre>{{
+                    formatDiagnosticsJson(message.diagnostics.memory)
+                  }}</pre>
                 </section>
 
                 <section>
@@ -156,13 +157,18 @@
                   <h4>Matches</h4>
                   <ol>
                     <li
-                      v-for="match in getDiagnosticsMatches(message.diagnostics)"
+                      v-for="match in getDiagnosticsMatches(
+                        message.diagnostics,
+                      )"
                       :key="`${message.id}-${match.type}-${match.title}-${match.score}`"
                     >
                       <strong>{{ match.type }}: {{ match.title }}</strong>
                       <span>
-                        score {{ match.score }} · {{ match.sourceUrl || 'no link' }}
-                        <template v-if="match.alwaysInclude"> · always</template>
+                        score {{ match.score }} ·
+                        {{ match.sourceUrl || 'no link' }}
+                        <template v-if="match.alwaysInclude">
+                          · always</template
+                        >
                       </span>
                       <p>{{ match.evidencePreview }}</p>
                     </li>
@@ -309,8 +315,10 @@ const storageKey = 'skyler-bot-chat-history';
 const introPromptStorageKey = 'skyler-bot-intro-seen';
 const disableDiscordWebhookKey = 'disable_discord_webhook';
 const rateLimitKey = 'skyler-bot-rate-history';
-const enableBotDiagnostics =
-  process.env.VUE_APP_SKYLER_BOT_DEBUG === 'true';
+const diagnosticsStorageKey = 'diag';
+const enableBotDiagnostics = process.env.VUE_APP_SKYLER_BOT_DEBUG === 'true';
+const botDiagnosticsStorageValue =
+  process.env.VUE_APP_SKYLER_BOT_DIAG_SECRET || '';
 const botDiagnosticsToken = process.env.VUE_APP_SKYLER_BOT_DEBUG_TOKEN || '';
 const maxQuestionLength = 250;
 const allowedQuestionPattern = /^[A-Za-z0-9 .,?!'"/&():-]*$/;
@@ -462,6 +470,14 @@ function setStoredValue(key, value) {
     });
     return false;
   }
+}
+
+function isStoredFlagEnabled(key) {
+  if (!botDiagnosticsStorageValue) {
+    return false;
+  }
+
+  return getStoredValue(key).trim() === botDiagnosticsStorageValue;
 }
 
 export default {
@@ -760,7 +776,7 @@ export default {
             role: message.role,
             text: message.text,
             createdAt: message.createdAt || new Date().toISOString(),
-            ...(enableBotDiagnostics && message.diagnostics
+            ...(this.isDiagnosticsEnabled() && message.diagnostics
               ? { diagnostics: message.diagnostics }
               : {}),
           }));
@@ -778,7 +794,7 @@ export default {
     saveMessages() {
       const messages = this.messages.slice(-40).map((message) => ({
         ...message,
-        ...(enableBotDiagnostics ? {} : { diagnostics: undefined }),
+        ...(this.isDiagnosticsEnabled() ? {} : { diagnostics: undefined }),
       }));
 
       setStoredValue(storageKey, JSON.stringify(messages));
@@ -863,8 +879,11 @@ export default {
     isDiscordWebhookDisabled() {
       return Boolean(getStoredValue(disableDiscordWebhookKey));
     },
+    isDiagnosticsEnabled() {
+      return enableBotDiagnostics && isStoredFlagEnabled(diagnosticsStorageKey);
+    },
     shouldRequestDiagnostics() {
-      return enableBotDiagnostics;
+      return this.isDiagnosticsEnabled();
     },
     formatDiagnosticsJson(value) {
       return JSON.stringify(value || null, null, 2);
