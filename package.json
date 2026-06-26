@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "resume:manifest": "node scripts/generate-resume-manifest.js",
+    "preserve": "node scripts/generate-resume-manifest.js",
+    "prebuild": "node scripts/generate-resume-manifest.js",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",

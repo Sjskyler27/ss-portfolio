@@ -4,6 +4,8 @@ import { getCurrentSource } from "./sourceInfo";
 const notificationPath = "/.netlify/functions/notify-view";
 const activityKey = "portfolio-notify-activities";
 const activeStateKey = "portfolio-notify-active-state";
+const initialViewKey = "portfolio-notify-initial-view";
+const engagementKey = "portfolio-notify-engaged";
 const sessionClosedKey = "portfolio-notify-session-closed";
 const sessionInfoKey = "portfolio-notify-session";
 const sessionCountKey = "portfolio-notify-session-count";
@@ -165,6 +167,8 @@ function getSessionInfo() {
   setStoredValue(localStorage, sessionCountKey, String(session.sessionNumber));
   setStoredValue(sessionStorage, sessionInfoKey, JSON.stringify(session));
   setStoredValue(sessionStorage, activityKey, JSON.stringify([]));
+  sessionStorage.removeItem(initialViewKey);
+  sessionStorage.removeItem(engagementKey);
   saveActiveState({
     activeMs: 0,
     lastMessageActiveMs: 0,
@@ -206,7 +210,8 @@ function addActivity(activity) {
 function getDedupeKey(payload) {
   const source = payload.source || "unknown";
   const event = payload.event || "site_view";
-  const target = payload.externalUrl || payload.projectId || payload.path || "/";
+  const target =
+    payload.externalUrl || payload.resumePath || payload.projectId || payload.path || "/";
 
   return `portfolio-notify:${event}:${source}:${target}`;
 }
@@ -225,6 +230,49 @@ function hasAlreadySent(payload) {
   }
 
   return false;
+}
+
+function queueInitialView(payload) {
+  if (hasAlreadySent(payload)) {
+    return;
+  }
+
+  setStoredValue(sessionStorage, initialViewKey, JSON.stringify(payload));
+}
+
+function getQueuedInitialView() {
+  const queuedPayload = getStoredValue(sessionStorage, initialViewKey);
+
+  if (!queuedPayload) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(queuedPayload);
+  } catch (error) {
+    sessionStorage.removeItem(initialViewKey);
+    return null;
+  }
+}
+
+function hasEngagement() {
+  return Boolean(getStoredValue(sessionStorage, engagementKey));
+}
+
+function markEngaged() {
+  setStoredValue(sessionStorage, engagementKey, "true");
+}
+
+function sendQueuedInitialView() {
+  const payload = getQueuedInitialView();
+
+  if (!payload) {
+    return;
+  }
+
+  sessionStorage.removeItem(initialViewKey);
+  markEngaged();
+  sendPayload(payload);
 }
 
 function isAutomatedPageLoad() {
@@ -308,9 +356,7 @@ export function notifyPortfolioView(path = window.location.pathname) {
     referrer: document.referrer,
   });
 
-  if (!hasAlreadySent(payload)) {
-    sendPayload(payload);
-  }
+  queueInitialView(payload);
 }
 
 export function notifySectionView(section, path = window.location.pathname) {
@@ -328,6 +374,7 @@ export function notifySectionView(section, path = window.location.pathname) {
 
   if (!hasAlreadySent(payload)) {
     addActivity(`Viewed ${section}`);
+    sendQueuedInitialView();
     sendPayload(payload);
   }
 }
@@ -348,6 +395,7 @@ export function notifyProjectView(project, path = window.location.pathname) {
 
   if (!hasAlreadySent(payload)) {
     addActivity(`Viewed ${project.id}`);
+    sendQueuedInitialView();
     sendPayload(payload);
   }
 }
@@ -370,11 +418,35 @@ export function notifyExternalSite(link, project, path = window.location.pathnam
 
   if (!hasAlreadySent(payload)) {
     addActivity(`external-site: ${payload.externalLabel}`);
+    sendQueuedInitialView();
+    sendPayload(payload);
+  }
+}
+
+export function notifyResumeView(
+  resumePath = "/Resume6-1.pdf",
+  path = window.location.pathname
+) {
+  const payload = withSession({
+    event: "resume_view",
+    path,
+    resumePath,
+    source: getSource(),
+    referrer: document.referrer,
+  });
+
+  if (!hasAlreadySent(payload)) {
+    addActivity("Viewed resume");
+    sendQueuedInitialView();
     sendPayload(payload);
   }
 }
 
 export function notifyPortfolioSessionEnd(path = window.location.pathname) {
+  if (!hasEngagement()) {
+    return;
+  }
+
   if (getStoredValue(sessionStorage, sessionClosedKey)) {
     return;
   }
