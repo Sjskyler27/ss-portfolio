@@ -1,5 +1,6 @@
 const allowedEvents = new Set([
   "external_site",
+  "resume_view",
   "site_view",
   "section_view",
   "project_view",
@@ -100,11 +101,16 @@ function formatCompactActivity(payload, user) {
   const section = cleanValue(payload.section, 80);
   const externalLabel = cleanValue(payload.externalLabel, 120);
   const externalUrl = cleanValue(payload.externalUrl, 180);
+  const resumePath = cleanValue(payload.resumePath, 180);
   const path = cleanValue(payload.path, 180) || "/";
   const prefix = formatCompactPrefix(payload, user);
 
   if (eventName === "external_site") {
     return `${prefix} external-site: ${externalLabel || externalUrl || "unknown"}`;
+  }
+
+  if (eventName === "resume_view") {
+    return `${prefix} viewed resume${resumePath ? `: ${resumePath}` : ""}`;
   }
 
   if (eventName === "project_view") {

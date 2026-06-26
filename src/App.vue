@@ -16,7 +16,13 @@
         </button>
       </nav>
       <div class="header-actions">
-        <a href="Resume6-1.pdf" target="_blank" class="resume-link">
+        <a
+          :href="resumeHref"
+          target="_blank"
+          rel="noreferrer"
+          class="resume-link"
+          @click="notifyResumeLink"
+        >
           Resume
         </a>
         <button
@@ -345,6 +351,7 @@
 import SkylerBot from './components/SkylerBot';
 import { experienceItems } from './data/experience';
 import { projects } from './data/projects';
+import resumeFiles from './data/resume-files.json';
 import {
   getLandingProjectId,
   preloadPortfolioImages,
@@ -356,10 +363,44 @@ import {
   notifyPortfolioSessionEnd,
   notifyPortfolioView,
   notifyProjectView,
+  notifyResumeView,
   notifySectionView,
 } from './services/notifications';
 
 const themeStorageKey = 'skyler-portfolio-theme';
+const defaultResumePath = '/Resume6-1.pdf';
+
+function findSourceResume(source) {
+  const normalizedSource = String(source || '').trim().toLowerCase();
+
+  if (!normalizedSource || !Array.isArray(resumeFiles)) {
+    return '';
+  }
+
+  const matches = resumeFiles
+    .filter((file) => {
+      const stem = String(file.stem || '').toLowerCase();
+      const name = String(file.name || '').toLowerCase();
+
+      return stem.includes(normalizedSource) || name.includes(normalizedSource);
+    })
+    .sort((a, b) => {
+      const aStem = String(a.stem || '').toLowerCase();
+      const bStem = String(b.stem || '').toLowerCase();
+
+      if (aStem === normalizedSource && bStem !== normalizedSource) {
+        return -1;
+      }
+
+      if (bStem === normalizedSource && aStem !== normalizedSource) {
+        return 1;
+      }
+
+      return a.name.localeCompare(b.name);
+    });
+
+  return matches[0]?.path || '';
+}
 
 export default {
   name: 'App',
@@ -392,6 +433,7 @@ export default {
       hasMountedPage: false,
       imagePriorityLoaded: false,
       landingProjectId: '',
+      resumeHref: defaultResumePath,
       isDarkMode: false,
       navExitDirection: 'nav-fill-back',
       navFillDirection: 'nav-fill-forward',
@@ -490,6 +532,7 @@ export default {
   mounted() {
     this.syncViewFromUrl();
     this.initializeSourceProjectSort();
+    this.initializeSourceResume();
     this.landingProjectId = getLandingProjectId(this.readyProjects);
     preloadPortfolioImages(this.readyProjects).then(({ landingProjectId }) => {
       this.landingProjectId = landingProjectId || '';
@@ -601,6 +644,16 @@ export default {
         }
       }
     },
+    initializeSourceResume() {
+      const source = getCurrentSource();
+
+      if (!source) {
+        this.resumeHref = defaultResumePath;
+        return;
+      }
+
+      this.resumeHref = findSourceResume(source) || defaultResumePath;
+    },
     setView(view, updateUrl = true) {
       this.setCurrentView(view);
       this.projectModalOpen = false;
@@ -620,8 +673,8 @@ export default {
       this.imageModalOpen = false;
       if (updateUrl) {
         this.updatePath(`/projects/${project.id}`);
+        notifyProjectView(project);
       }
-      notifyProjectView(project);
     },
     closeProjectModal(updateUrl = true) {
       this.projectModalOpen = false;
@@ -713,6 +766,9 @@ export default {
     },
     notifyExternalLink(link) {
       notifyExternalSite(link, this.selectedProject);
+    },
+    notifyResumeLink() {
+      notifyResumeView(this.resumeHref);
     },
     withSourceQuery(path) {
       const source = getCurrentSource();
