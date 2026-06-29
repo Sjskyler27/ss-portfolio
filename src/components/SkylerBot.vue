@@ -318,8 +318,11 @@ const rateLimitKey = 'skyler-bot-rate-history';
 const diagnosticsStorageKey = 'diag';
 const enableBotDiagnostics = process.env.VUE_APP_SKYLER_BOT_DEBUG === 'true';
 const botDiagnosticsStorageValue =
-  process.env.VUE_APP_SKYLER_BOT_DIAG_SECRET || '';
-const botDiagnosticsToken = process.env.VUE_APP_SKYLER_BOT_DEBUG_TOKEN || '';
+  process.env.VUE_APP_SKYLER_BOT_DIAG_SECRET || process.env.VUE_APP_DIAG_SECRET || '';
+const botDiagnosticsToken =
+  process.env.VUE_APP_SKYLER_BOT_DEBUG_TOKEN ||
+  process.env.VUE_APP_SKYLER_BOT_PRIVATE_DEBUG_TOKEN ||
+  '';
 const maxQuestionLength = 250;
 const allowedQuestionPattern = /^[A-Za-z0-9 .,?!'"/&():-]*$/;
 const disallowedQuestionChars = /[^A-Za-z0-9 .,?!'"/&():-]/g;
