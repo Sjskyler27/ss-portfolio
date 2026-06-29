@@ -180,7 +180,12 @@ export const projects = [
       'Healthcare Data Modeling',
       'Admin Workflows',
     ],
-    links: [],
+    links: [
+      {
+        name: 'Demo',
+        url: 'https://healthcare-app-khaki-seven.vercel.app/admin/ai-reports/',
+      },
+    ],
   },
   {
     id: 'wordis',
