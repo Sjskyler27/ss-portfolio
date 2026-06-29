@@ -109,7 +109,16 @@ export const projects = [
       'Document Processing',
       'AI-Assisted ETL',
     ],
-    links: [],
+    links: [
+      {
+        name: 'Demo',
+        url: 'https://healthcare-app-khaki-seven.vercel.app/admin/ai-reports',
+      },
+      {
+        name: 'GitLab Repo',
+        url: 'https://gitlab.com/Sjskyler27/healthcare_app',
+      },
+    ],
   },
   {
     id: 'everee_payroll_integration',
@@ -141,6 +150,39 @@ export const projects = [
     links: [],
   },
   {
+    id: 'healthcare_generative_admin_views',
+    title: 'AI-Generated Healthcare Admin Views',
+    favorite: true,
+    type: 'Personal Project',
+    category: 'featured',
+    group: 'fullstack',
+    summary:
+      'A generative ui healthcare admin assistant that turns plain-English operational questions into validated Django ORM queries, dynamic tables, and chart-ready views.',
+    impact:
+      'Designed a schema-aware AI workflow that interprets healthcare reporting requests, validates generated query plans against approved models, and renders safe read-only admin views from existing patient, encounter, condition, observation, medication, procedure, and referral data.',
+    description:
+      'This project extends a Django-based healthcare data platform with an AI-powered admin assistant for providers and administrators. Instead of requiring every report, dashboard, or workflow to be manually built ahead of time, users can ask useful business or clinical operations questions in plain English, such as "show asthma patients by city," "find patients with recent ER encounters," or "list patients with abnormal observations and no recent follow-up." The assistant interprets the request, identifies relevant healthcare models, creates a structured query and view plan, and uses Django backend logic to safely retrieve and present the data. Regular expression help determine what information to pass to the model which creates a plan. the backend validates the AI-generated plan, translates it into approved Django ORM queries, and renders the result as a table, chart-ready dataset, or generated graph admin view. Users are able to follow up with the table by being linked directly to records that need modifying. The project demonstrates practical AI integration in a full-stack healthcare application by combining natural language understanding, schema-aware query planning, Django ORM execution, dynamic UI generation, SQL-style reporting concepts, and healthcare-focused workflow automation.',
+    images: [
+      'healthcare_generative_admin_views/1.png',
+      'healthcare_generative_admin_views/2.png',
+      'healthcare_generative_admin_views/3.png',
+    ],
+    tech: [
+      'Django',
+      'Python',
+      'PostgreSQL',
+      'Django ORM',
+      'AI Product',
+      'Generative UI',
+      'Schema-Aware Query Planning',
+      'Dynamic Tables',
+      'Chart Rendering',
+      'Healthcare Data Modeling',
+      'Admin Workflows',
+    ],
+    links: [],
+  },
+  {
     id: 'wordis',
     title: 'Wordis',
     type: 'Hackathon',
@@ -165,7 +207,7 @@ export const projects = [
     id: 'stonecrest',
     title: 'Stonecrest Rentals',
     type: 'Professional',
-    category: 'featured',
+    category: 'supporting',
     group: 'professional',
 
     summary:

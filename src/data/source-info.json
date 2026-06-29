@@ -56,7 +56,29 @@
         "ai-ml",
         "ai_ml",
         "enterprise-financial-client",
-        "detroit-python"
+        "detroit-python",
+        "ally",
+        "optomi",
+        "logos",
+        "lightspeed",
+        "charlotte-python",
+        "claude-agents"
+      ]
+    },
+    {
+      "id": 6,
+      "key": "tmst",
+      "label": "Ten Mile Square Technologies",
+      "urlKey": "tmst",
+      "aliases": [
+        "ten-mile-square",
+        "ten-mile-square-technologies",
+        "tms",
+        "tmst",
+        "loan-origination",
+        "typescript-node",
+        "apollo-graphql",
+        "financial-services"
       ]
     }
   ]
