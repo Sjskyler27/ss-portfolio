@@ -80,6 +80,22 @@
         "apollo-graphql",
         "financial-services"
       ]
+    },
+    {
+      "id": 7,
+      "key": "pct",
+      "label": "PCT",
+      "urlKey": "pct",
+      "aliases": [
+        "ai-infrastructure",
+        "frontend-ai-infrastructure",
+        "developer-tools",
+        "react-ui-library",
+        "embeddable-components",
+        "dashboard-frontend",
+        "connectivity-layer",
+        "b2b-saas"
+      ]
     }
   ]
 }

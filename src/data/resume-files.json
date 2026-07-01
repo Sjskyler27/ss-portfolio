@@ -12,6 +12,12 @@
     "path": "/resume/skyler-simpson-bcbs.docx"
   },
   {
+    "name": "skyler-simpson-pct.pdf",
+    "stem": "skyler-simpson-pct",
+    "extension": "pdf",
+    "path": "/resume/skyler-simpson-pct.pdf"
+  },
+  {
     "name": "skyler-simpson-tmst.pdf",
     "stem": "skyler-simpson-tmst",
     "extension": "pdf",

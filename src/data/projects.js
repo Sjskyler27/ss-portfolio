@@ -304,7 +304,7 @@ export const projects = [
       'component_library/image_2.png',
       'component_library/image_3.png',
     ],
-    tech: ['Vue', 'SCSS', 'GitHub Pages', 'Design Systems'],
+    tech: ['Vue', 'SCSS', 'GitHub Pages', 'Design Systems', 'UI library'],
     links: [
       {
         name: 'Component Library',
