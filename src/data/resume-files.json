@@ -1,14 +1,20 @@
 [
   {
-    "name": "skyler-simpson-aiml.docx",
+    "name": "skyler-simpson-aiml.pdf",
     "stem": "skyler-simpson-aiml",
-    "extension": "docx",
-    "path": "/resume/skyler-simpson-aiml.docx"
+    "extension": "pdf",
+    "path": "/resume/skyler-simpson-aiml.pdf"
   },
   {
     "name": "skyler-simpson-bcbs.docx",
     "stem": "skyler-simpson-bcbs",
     "extension": "docx",
     "path": "/resume/skyler-simpson-bcbs.docx"
+  },
+  {
+    "name": "skyler-simpson-tmst.pdf",
+    "stem": "skyler-simpson-tmst",
+    "extension": "pdf",
+    "path": "/resume/skyler-simpson-tmst.pdf"
   }
 ]

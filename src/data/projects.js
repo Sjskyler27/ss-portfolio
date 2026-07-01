@@ -123,7 +123,7 @@ export const projects = [
   {
     id: 'everee_payroll_integration',
     title: 'Everee Payroll API Integration',
-    notReady: true,
+    notReady: false,
     type: 'Professional Work',
     category: 'featured',
     group: 'backend',
@@ -133,11 +133,7 @@ export const projects = [
       'Built a Rust integration with a third-party payroll provider — an authenticated HTTP client, a session-scoped onboarding-status endpoint with TTL caching, and deterministic mocked-HTTP test coverage — serving payroll status to a Flutter payments screen.',
     description:
       'This work focused on integrating a third-party payroll provider (Everee) into a production marketplace platform using Rust. I built the integration from the HTTP layer up: a shared request client that authenticates every call with HTTP Basic auth and the required multi-tenant headers, and a session-scoped endpoint that returns a worker’s payroll-onboarding status. I implemented the identifier model that maps internal user IDs to the vendor’s external and internal worker IDs, added in-memory TTL caching to eliminate redundant upstream calls, and wrote explicit error handling that maps not-found responses to a clean "not onboarded" result. I designed the test strategy around mocked HTTP and PII-scrubbed JSON fixtures so the suite is fully deterministic and never depends on live vendor data, covering the success, incomplete, and not-found paths as well as the auth-header construction. The endpoint connects end-to-end to a Flutter Payments screen, where a "Payroll Onboarding" banner renders only when a worker’s onboarding is incomplete.',
-    images: [
-      'everee_payroll_integration/1.png',
-      'everee_payroll_integration/2.png',
-      'everee_payroll_integration/3.png',
-    ],
+    images: ['everee_payroll_integration/1.png'],
     tech: [
       'Rust',
       'Flutter',
@@ -172,6 +168,7 @@ export const projects = [
       'Python',
       'PostgreSQL',
       'Django ORM',
+      'Prompt Engineering',
       'AI Product',
       'Generative UI',
       'Schema-Aware Query Planning',
